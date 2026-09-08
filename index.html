@@ -753,13 +753,14 @@
       htmlTabel += `</tbody></table>`;
       document.getElementById('adminTabelPemasukan').innerHTML = htmlTabel;
     }
-    // 1. Rekapitulasi Semua Divisi dengan Baris Total Akumulasi
+    // 1. Rekapitulasi Semua Divisi + Baris Lain-Lain Admin + Baris Total Keseluruhan
     async function muatRekapSemuaDivisi() {
       const tbody = document.getElementById('adminTabelRekap');
       tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">Menghitung rekapitulasi data...</td></tr>`;
 
       const { data: divisions } = await client.from('divisions').select('*');
       const { data: transfers } = await client.from('budget_transfers').select('division_id, amount');
+      // Pastikan kolom division_id dan amount diambil tanpa filter agar data pengeluaran admin (null) ikut terambil
       const { data: expenses } = await client.from('expenses').select('division_id, amount');
       const { data: requests } = await client.from('budget_requests').select('division_id, amount').eq('status', 'approved');
 
@@ -771,6 +772,7 @@
       let html = '';
       let sumPagu = 0, sumTransfer = 0, sumBelanja = 0, sumSaldo = 0;
 
+      // 1. Loop untuk 12 Divisi Utama
       divisions.forEach(d => {
         let paguDasar = Number(d.budget_limit || 0);
         let tambahanDisetujui = 0;
@@ -792,7 +794,6 @@
 
         let sisaSaldo = totalTransfer - totalBelanja;
 
-        // Akumulasi Total
         sumPagu += totalPaguAktif;
         sumTransfer += totalTransfer;
         sumBelanja += totalBelanja;
@@ -814,7 +815,26 @@
           </tr>`;
       });
 
-      // Tambahkan Baris Total di Paling Bawah Tabel
+      // 2. Hitung Pengeluaran Lain-Lain (Operasional Umum Admin / division_id bernilai null)
+      let totalBelanjaLainLain = 0;
+      if (expenses) {
+        expenses.filter(e => e.division_id === null || e.division_id === undefined).forEach(e => totalBelanjaLainLain += Number(e.amount));
+      }
+
+      // Akumulasikan ke total belanja keseluruhan
+      sumBelanja += totalBelanjaLainLain;
+
+      // 3. Tambahkan Baris Khusus Lain-Lain (Admin) di Bawah Tabel Divisi
+      html += `
+        <tr class="table-warning">
+          <td class="fw-semibold fst-italic">Pengeluaran Lain-Lain (Admin)</td>
+          <td><span class="text-muted">-</span></td>
+          <td><span class="text-muted">-</span></td>
+          <td class="fw-bold">Rp ${totalBelanjaLainLain.toLocaleString('id-ID')}</td>
+          <td><span class="text-muted">-</span></td>
+        </tr>`;
+
+      // 4. Baris Total Keseluruhan
       html += `
         <tr class="table-dark fw-bold">
           <td>TOTAL KESELURUHAN</td>
