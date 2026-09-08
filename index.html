@@ -366,6 +366,54 @@
     function muatDataAdmin() {
       console.log("Memuat data admin...");
     }
+    // ==========================================
+    // FUNGSI-FUNGSI UNTUK BENDAHARA
+    // ==========================================
+
+    // 1. Simpan Pemasukan (Iuran / Donatur)
+    document.getElementById('formPemasukan').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const source = document.getElementById('incSource').value.trim();
+      const amount = document.getElementById('incAmount').value.trim();
+      const description = document.getElementById('incDesc').value.trim();
+
+      const { error } = await client
+        .from('incomes')
+        .insert([{ source: source, amount: parseFloat(amount), description: description }]);
+
+      if (error) {
+        alert("Gagal menyimpan pemasukan: " + error.message);
+      } else {
+        alert("Pemasukan berhasil dicatat!");
+        document.getElementById('formPemasukan').reset();
+      }
+    });
+
+    // 2. Transfer Dana ke Divisi
+    document.getElementById('formTransfer').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const division_id = document.getElementById('trfDivision').value;
+      const amount = document.getElementById('trfAmount').value.trim();
+      const description = document.getElementById('trfDesc').value.trim();
+
+      if (!division_id) {
+        alert("Pilih divisi tujuan terlebih dahulu!");
+        return;
+      }
+
+      const { error } = await client
+        .from('budget_transfers')
+        .insert([{ division_id: parseInt(division_id), amount: parseFloat(amount), description: description }]);
+
+      if (error) {
+        alert("Gagal melakukan transfer: " + error.message);
+      } else {
+        alert("Dana berhasil ditransfer ke divisi!");
+        document.getElementById('formTransfer').reset();
+      }
+    });
   </script>
 </body>
 </html>
