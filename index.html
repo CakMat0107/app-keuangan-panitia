@@ -93,8 +93,8 @@
             <button class="btn btn-dark btn-sm fw-bold" onclick="cetakLaporanLPJ()">
                 <i class="bi bi-printer me-1"></i> Cetak / Unduh LPJ
              </button>
-            <div class="table-responsive">
-              <table class="table table-hover align-middle">
+            <div class="table-responsive shadow-sm rounded border">
+              <table class="table table-hover align-middle mb-0 text-nowrap">
                 <thead class="table-light">
                   <tr>
                     <th>Divisi</th>
@@ -1108,22 +1108,51 @@
 
       let sisaKasPusat = totalPemasukan - totalKeluarTransfer;
 
-      // Render Ringkasan Kartu Kas
-      document.getElementById('benRingkasanKas').innerHTML = `
-        <div class="row text-center g-2">
-          <div class="col-md-4 p-3 bg-light rounded shadow-sm">
-            <small class="text-muted">Total Pemasukan Kas</small>
-            <h4 class="fw-bold text-success mb-0">Rp ${totalPemasukan.toLocaleString('id-ID')}</h4>
-          </div>
-          <div class="col-md-4 p-3 bg-light rounded shadow-sm">
-            <small class="text-muted">Total Keluar (Transfer)</small>
-            <h4 class="fw-bold text-danger mb-0">Rp ${totalKeluarTransfer.toLocaleString('id-ID')}</h4>
-          </div>
-          <div class="col-md-4 p-3 bg-light rounded shadow-sm">
-            <small class="text-muted">Sisa Kas di Bendahara</small>
-            <h4 class="fw-bold text-primary mb-0">Rp ${sisaKasPusat.toLocaleString('id-ID')}</h4>
-          </div>
-        </div>`;
+      // Render Kartu Metrik Visual Modern di Tab 3 Bendahara
+      const containerRingkasan = document.getElementById('benRingkasanKas');
+      if (containerRingkasan) {
+        containerRingkasan.innerHTML = `
+          <div class="row g-3 mb-2">
+            <!-- Kartu 1: Total Pemasukan -->
+            <div class="col-md-4">
+              <div class="card border-0 shadow-sm rounded-4 bg-success bg-gradient text-white p-3">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <p class="mb-0 text-white-50 small fw-semibold">Total Kas Masuk</p>
+                    <h3 class="fw-bold mb-0 mt-1">Rp ${totalPemasukan.toLocaleString('id-ID')}</h3>
+                  </div>
+                  <div class="fs-1 text-white-50"><i class="bi bi-wallet-fill"></i></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Kartu 2: Total Transfer -->
+            <div class="col-md-4">
+              <div class="card border-0 shadow-sm rounded-4 bg-warning bg-gradient text-dark p-3">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <p class="mb-0 text-black-50 small fw-semibold">Total Didistribusikan</p>
+                    <h3 class="fw-bold mb-0 mt-1">Rp ${totalKeluarTransfer.toLocaleString('id-ID')}</h3>
+                  </div>
+                  <div class="fs-1 text-black-50"><i class="bi bi-send-fill"></i></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Kartu 3: Sisa Kas Murni -->
+            <div class="col-md-4">
+              <div class="card border-0 shadow-sm rounded-4 bg-primary bg-gradient text-white p-3">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <p class="mb-0 text-white-50 small fw-semibold">Sisa Kas di Bendahara</p>
+                    <h3 class="fw-bold mb-0 mt-1">Rp ${sisaKasPusat.toLocaleString('id-ID')}</h3>
+                  </div>
+                  <div class="fs-1 text-white-50"><i class="bi bi-cash-stack"></i></div>
+                </div>
+              </div>
+            </div>
+          </div>`;
+      }
 
       // Render Tabel Pengelompokan Sumber Pemasukan
       let htmlTabel = `
@@ -1151,7 +1180,11 @@
       }
 
       htmlTabel += `</tbody></table>`;
-      document.getElementById('benTabelPemasukan').innerHTML = htmlTabel;
+      
+      const containerTabel = document.getElementById('benTabelPemasukan');
+      if (containerTabel) {
+        containerTabel.innerHTML = htmlTabel;
+      }
     }
     // Fungsi universal untuk mencatat log aktivitas
     async function catatLogAktivitas(pesan) {
