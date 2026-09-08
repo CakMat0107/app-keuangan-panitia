@@ -3,68 +3,283 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Keuangan Panitia</title>
+  <title>Sistem Keuangan Terpadu Panitia</title>
+  <!-- Bootstrap 5 CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <!-- Supabase CDN -->
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <!-- Supabase JS -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="bg-light p-4">
+<body class="bg-light">
 
-  <div class="container" style="max-width: 500px; margin-top: 5vh;">
+  <!-- NAVBAR / HEADER -->
+  <nav class="navbar navbar-dark bg-dark shadow-sm px-3" id="mainNavbar" style="display: none;">
+    <div class="container-fluid">
+      <span class="navbar-brand fw-bold">
+        <i class="bi bi-wallet2 me-2"></i>Keuangan <span id="roleTitleBadge" class="badge bg-primary">Role</span>
+      </span>
+      <div class="d-flex align-items-center">
+        <span class="text-white me-3 d-none d-sm-inline" id="userInfo">Halo, User</span>
+        <button class="btn btn-outline-light btn-sm" onclick="logout()">
+          <i class="bi bi-box-arrow-right me-1"></i>Logout
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container my-4" style="max-width: 900px;">
     
-    <!-- HALAMAN LOGIN -->
-    <div id="loginSection" class="card shadow">
-      <div class="card-body p-4">
-        <h4 class="text-center mb-4 text-primary fw-bold">Login Keuangan</h4>
-        <div class="mb-3">
-          <label class="form-label fw-semibold">Username</label>
-          <input type="text" id="username" class="form-control" placeholder="Contoh: admin / konsumsi">
+    <!-- ================= SECTION 1: HALAMAN LOGIN ================= -->
+    <div id="loginSection" class="row justify-content-center" style="margin-top: 10vh;">
+      <div class="col-md-5">
+        <div class="card shadow border-0 rounded-4">
+          <div class="card-body p-4 p-sm-5">
+            <div class="text-center mb-4">
+              <i class="bi bi-shield-lock-fill text-primary display-4"></i>
+              <h3 class="fw-bold mt-2">Login Keuangan</h3>
+              <p class="text-muted small">Silakan masuk sesuai hak akses Anda</p>
+            </div>
+            
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Username</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-person"></i></span>
+                <input type="text" id="username" class="form-control" placeholder="Contoh: admin / bendahara / konsumsi">
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <label class="form-label fw-semibold">Password</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-key"></i></span>
+                <input type="password" id="password" class="form-control" placeholder="Password...">
+              </div>
+            </div>
+
+            <button class="btn btn-primary w-100 py-2 fw-bold rounded-3 shadow-sm" id="btnLogin" onclick="prosesLogin()">
+              Masuk Sistem
+            </button>
+            <div id="loginStatus" class="mt-3 text-danger text-center fw-bold small"></div>
+          </div>
         </div>
-        <div class="mb-4">
-          <label class="form-label fw-semibold">Password</label>
-          <input type="password" id="password" class="form-control">
-        </div>
-        <button class="btn btn-primary w-100 fw-bold" id="btnLogin" onclick="prosesLogin()">Masuk</button>
-        <div id="loginStatus" class="mt-3 text-danger text-center fw-bold"></div>
       </div>
     </div>
 
-    <!-- HALAMAN ADMIN -->
-    <div id="adminSection" class="card shadow" style="display: none;">
-      <div class="card-body p-4">
-        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
-          <h4 class="text-primary fw-bold mb-0">Dashboard Admin</h4>
-          <button class="btn btn-outline-danger btn-sm fw-bold" onclick="logout()">Logout</button>
+    <!-- ================= SECTION 2: DASHBOARD ADMIN ================= -->
+    <div id="adminSection" class="role-section" style="display: none;">
+      <div class="row mb-4">
+        <div class="col-12">
+          <div class="alert alert-primary shadow-sm rounded-4 p-4 border-0">
+            <h4 class="fw-bold mb-1">Dashboard Admin</h4>
+            <p class="mb-0 text-muted small">Monitor real-time anggaran, pengeluaran lain-lain, dan persetujuan penambahan dana.</p>
+          </div>
         </div>
-        <div class="alert alert-info">Selamat datang, <strong>Admin</strong>! Data Pagu akan muncul di sini.</div>
+      </div>
+
+      <!-- Nav Tabs Admin -->
+      <ul class="nav nav-pills mb-3 gap-2" role="tablist">
+        <li class="nav-item"><button class="nav-link active rounded-pill px-3" data-bs-toggle="pill" data-bs-target="#adminTab1">Rekap & Saldo</button></li>
+        <li class="nav-item"><button class="nav-link rounded-pill px-3" data-bs-toggle="pill" data-bs-target="#adminTab2">Persetujuan Dana</button></li>
+        <li class="nav-item"><button class="nav-link rounded-pill px-3" data-bs-toggle="pill" data-bs-target="#adminTab3">Belanja Lain-lain</button></li>
+      </ul>
+
+      <div class="tab-content">
+        <div class="tab-pane fade show active" id="adminTab1">
+          <div class="card border-0 shadow-sm rounded-4 p-3">
+            <h5 class="fw-bold mb-3">Rekapitulasi Anggaran & Realisasi Per Divisi</h5>
+            <div class="table-responsive">
+              <table class="table table-hover align-middle">
+                <thead class="table-light">
+                  <tr>
+                    <th>Divisi</th>
+                    <th>Pagu Anggaran</th>
+                    <th>Dana Masuk (Transfer)</th>
+                    <th>Realisasi Belanja</th>
+                    <th>Sisa Saldo</th>
+                  </tr>
+                </thead>
+                <tbody id="adminTabelRekap">
+                  <tr><td colspan="5" class="text-center text-muted">Memuat data rekap...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="tab-pane fade" id="adminTab2">
+          <div class="card border-0 shadow-sm rounded-4 p-4">
+            <h5 class="fw-bold mb-3">Daftar Pengajuan Penambahan Anggaran dari Divisi</h5>
+            <div id="adminListPengajuan" class="text-muted">Belum ada pengajuan.</div>
+          </div>
+        </div>
+        <div class="tab-pane fade" id="adminTab3">
+          <div class="card border-0 shadow-sm rounded-4 p-4">
+            <h5 class="fw-bold mb-3">Input Pengeluaran Lain-Lain (Operasional Umum)</h5>
+            <p class="text-muted small">Pengeluaran di luar pagu divisi tertentu.</p>
+            <!-- Form Input Lain-lain akan ditaruh di sini -->
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- HALAMAN BENDAHARA -->
-    <div id="bendaharaSection" class="card shadow" style="display: none;">
-      <div class="card-body p-4">
-        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
-          <h4 class="text-success fw-bold mb-0">Input Realisasi</h4>
-          <button class="btn btn-outline-danger btn-sm fw-bold" onclick="logout()">Logout</button>
+    <!-- ================= SECTION 3: DASHBOARD BENDAHARA ================= -->
+    <div id="bendaharaSection" class="role-section" style="display: none;">
+      <div class="row mb-4">
+        <div class="col-12">
+          <div class="alert alert-success shadow-sm rounded-4 p-4 border-0">
+            <h4 class="fw-bold mb-1">Dashboard Bendahara Utama</h4>
+            <p class="mb-0 text-muted small">Kelola kas masuk (iuran/donatur) dan distribusikan dana ke divisi-divisi.</p>
+          </div>
         </div>
-        <div class="alert alert-success">Selamat datang, Divisi <strong><span id="namaDivisi"></span></strong>! Form nota akan muncul di sini.</div>
+      </div>
+
+      <!-- Nav Tabs Bendahara -->
+      <ul class="nav nav-pills mb-3 gap-2" role="tablist">
+        <li class="nav-item"><button class="nav-link active rounded-pill px-3" data-bs-toggle="pill" data-bs-target="#benTab1">Input Pemasukan</button></li>
+        <li class="nav-item"><button class="nav-link rounded-pill px-3" data-bs-toggle="pill" data-bs-target="#benTab2">Transfer ke Divisi</button></li>
+        <li class="nav-item"><button class="nav-link rounded-pill px-3" data-bs-toggle="pill" data-bs-target="#benTab3">Rekap & Saldo Kas</button></li>
+      </ul>
+
+      <div class="tab-content">
+        <div class="tab-pane fade show active" id="benTab1">
+          <div class="card border-0 shadow-sm rounded-4 p-4">
+            <h5 class="fw-bold mb-3">Catat Kas Masuk (Iuran Santri / Donatur)</h5>
+            <form id="formPemasukan">
+              <div class="mb-3">
+                <label class="form-label">Sumber Pemasukan</label>
+                <input type="text" id="incSource" class="form-control" placeholder="Contoh: Iuran Santri TPQ / Donatur H. Ali" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Nominal (Rp)</label>
+                <input type="number" id="incAmount" class="form-control" placeholder="0" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Keterangan Tambahan</label>
+                <textarea id="incDesc" class="form-control" rows="2" placeholder="Opsional..."></textarea>
+              </div>
+              <button type="submit" class="btn btn-success w-100 fw-bold">Simpan Pemasukan</button>
+            </form>
+          </div>
+        </div>
+        <div class="tab-pane fade" id="benTab2">
+          <div class="card border-0 shadow-sm rounded-4 p-4">
+            <h5 class="fw-bold mb-3">Transfer / Alokasi Dana ke Divisi</h5>
+            <form id="formTransfer">
+              <div class="mb-3">
+                <label class="form-label">Pilih Divisi Tujuan</label>
+                <select id="trfDivision" class="form-select" required>
+                  <option value="">Pilih Divisi...</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Nominal Transfer (Rp)</label>
+                <input type="number" id="trfAmount" class="form-control" placeholder="0" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Catatan Transfer</label>
+                <textarea id="trfDesc" class="form-control" rows="2" placeholder="Contoh: Tahap 1 pencairan anggaran..."></textarea>
+              </div>
+              <button type="submit" class="btn btn-success w-100 fw-bold">Kirim Dana ke Divisi</button>
+            </form>
+          </div>
+        </div>
+        <div class="tab-pane fade" id="benTab3">
+          <div class="card border-0 shadow-sm rounded-4 p-4">
+            <h5 class="fw-bold mb-3">Rekapitulasi Kas & Riwayat Transfer</h5>
+            <div id="benRekapContent" class="text-muted">Memuat rekapitulasi kas...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= SECTION 4: DASHBOARD DIVISI ================= -->
+    <div id="divisiSection" class="role-section" style="display: none;">
+      <div class="row mb-4">
+        <div class="col-12">
+          <div class="alert alert-warning shadow-sm rounded-4 p-4 border-0">
+            <h4 class="fw-bold mb-1">Dashboard Divisi: <span id="namaDivisiBanner" class="text-dark"></span></h4>
+            <p class="mb-0 text-muted small">Input realisasi belanja nota, pantau sisa saldo divisi, dan ajukan tambahan anggaran.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Nav Tabs Divisi -->
+      <ul class="nav nav-pills mb-3 gap-2" role="tablist">
+        <li class="nav-item"><button class="nav-link active rounded-pill px-3" data-bs-toggle="pill" data-bs-target="#divTab1">Input Realisasi Nota</button></li>
+        <li class="nav-item"><button class="nav-link rounded-pill px-3" data-bs-toggle="pill" data-bs-target="#divTab2">Riwayat & Saldo</button></li>
+        <li class="nav-item"><button class="nav-link rounded-pill px-3" data-bs-toggle="pill" data-bs-target="#divTab3">Pengajuan Tambahan</button></li>
+      </ul>
+
+      <div class="tab-content">
+        <div class="tab-pane fade show active" id="divTab1">
+          <div class="card border-0 shadow-sm rounded-4 p-4">
+            <h5 class="fw-bold mb-3">Form Input Pengeluaran & Nota Belanja</h5>
+            <form id="formRealisasiDivisi">
+              <div class="mb-3">
+                <label class="form-label">Nominal Pengeluaran (Rp)</label>
+                <input type="number" id="divAmount" class="form-control" placeholder="0" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Keterangan / Uraian Belanja</label>
+                <textarea id="divDesc" class="form-control" rows="2" placeholder="Contoh: Beli konsumsi rapat akbar..." required></textarea>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Foto Bukti Nota / Transaksi</label>
+                <input type="file" id="divFile" class="form-control" accept="image/*" required>
+                <div class="form-text">Format gambar (JPG/PNG). Maksimal ukuran file wajar.</div>
+              </div>
+              <button type="submit" class="btn btn-warning w-100 fw-bold text-dark">Kirim Laporan Belanja</button>
+            </form>
+          </div>
+        </div>
+        <div class="tab-pane fade" id="divTab2">
+          <div class="card border-0 shadow-sm rounded-4 p-4">
+            <h5 class="fw-bold mb-3">Saldo & Rekapitulasi Divisi Anda</h5>
+            <div id="divSaldoContent" class="mb-3">Memuat saldo...</div>
+            <hr>
+            <h6 class="fw-bold mb-2">Riwayat Belanja Divisi</h6>
+            <div id="divRiwayatList" class="text-muted small">Belum ada data belanja.</div>
+          </div>
+        </div>
+        <div class="tab-pane fade" id="divTab3">
+          <div class="card border-0 shadow-sm rounded-4 p-4">
+            <h5 class="fw-bold mb-3">Pengajuan Tambahan Anggaran ke Admin</h5>
+            <form id="formPengajuan">
+              <div class="mb-3">
+                <label class="form-label">Nominal Tambahan yang Diminta (Rp)</label>
+                <input type="number" id="reqAmount" class="form-control" placeholder="0" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Alasan / Kebutuhan Mendesak</label>
+                <textarea id="reqReason" class="form-control" rows="3" placeholder="Jelaskan kenapa membutuhkan tambahan anggaran..." required></textarea>
+              </div>
+              <button type="submit" class="btn btn-danger w-100 fw-bold">Kirim Pengajuan</button>
+            </form>
+          </div>
+        </div>
       </div>
     </div>
 
   </div>
 
+  <!-- Bootstrap JS Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
   <script>
+    // 1. KONEKSI SUPABASE
     const SUPABASE_URL = 'https://nffrxxkydlsvtbliqalv.supabase.co'; 
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5mZnJ4eGt5ZGxzdnRibGlxYWx2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg4MzI1NTcsImV4cCI6MjEwNDQwODU1N30.s5YBFQ7W1KRKba3MMRFl-q42nRRApak_3QLd7S4B85A'; 
-    
-    // PERBAIKAN: Gunakan window.supabase dan ganti nama variabel jadi "client"
     const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+    // 2. CEK SESI SAAT HALAMAN DIBUKA
     window.onload = function() {
       const savedUser = sessionStorage.getItem('userData');
-      if(savedUser) tampilkanHalaman(JSON.parse(savedUser));
+      if(savedUser) {
+        tampilkanHalaman(JSON.parse(savedUser));
+      }
     };
 
+    // 3. FUNGSI LOGIN
     async function prosesLogin() {
       const user = document.getElementById('username').value.trim();
       const pass = document.getElementById('password').value.trim();
@@ -72,29 +287,30 @@
       const status = document.getElementById('loginStatus');
       
       if(!user || !pass) {
-        status.innerText = "Isi username dan password!";
+        status.innerText = "Username dan password wajib diisi!";
         return;
       }
 
       btn.innerText = "Memeriksa..."; btn.disabled = true; status.innerText = "";
 
       try {
-        // PERBAIKAN: Gunakan "client.from", bukan "supabase.from"
         const { data, error } = await client
           .from('app_users')
           .select('id, username, role, division_id, divisions(name)')
           .eq('username', user)
           .eq('password', pass);
 
-        if (error) throw new Error("Gagal menghubungi server.");
-        if (!data || data.length === 0) throw new Error("Username atau password salah!");
+        if (error || !data || data.length === 0) {
+          throw new Error("Username atau password salah!");
+        }
 
-        const userAsli = data[0]; 
+        const u = data[0];
         const userData = {
-          id: userAsli.id,
-          role: userAsli.role,
-          division_id: userAsli.division_id,
-          division_name: userAsli.divisions ? userAsli.divisions.name : null
+          id: u.id,
+          username: u.username,
+          role: u.role,
+          division_id: u.division_id,
+          division_name: u.divisions ? u.divisions.name : null
         };
         
         sessionStorage.setItem('userData', JSON.stringify(userData));
@@ -103,23 +319,52 @@
       } catch (err) {
         status.innerText = err.message;
       } finally {
-        btn.innerText = "Masuk"; btn.disabled = false;
+        btn.innerText = "Masuk Sistem"; btn.disabled = false;
       }
     }
 
-    function tampilkanHalaman(userData) {
+    // 4. ROUTING TAMPILAN BERDASARKAN ROLE
+    function tampilkanHalaman(u) {
       document.getElementById('loginSection').style.display = 'none';
-      if (userData.role === 'admin') {
+      document.getElementById('mainNavbar').style.display = 'block';
+      document.getElementById('userInfo').innerText = u.username.toUpperCase() + " (" + u.role.toUpperCase() + ")";
+
+      if (u.role === 'admin') {
         document.getElementById('adminSection').style.display = 'block';
-      } else if (userData.role === 'bendahara') {
+        document.getElementById('roleTitleBadge').innerText = "ADMIN";
+        muatDataAdmin();
+      } else if (u.role === 'bendahara') {
         document.getElementById('bendaharaSection').style.display = 'block';
-        document.getElementById('namaDivisi').innerText = userData.division_name;
+        document.getElementById('roleTitleBadge').innerText = "BENDAHARA";
+        muatDropdownDivisi();
+      } else if (u.role === 'divisi') {
+        document.getElementById('divisiSection').style.display = 'block';
+        document.getElementById('roleTitleBadge').innerText = u.division_name.toUpperCase();
+        document.getElementById('namaDivisiBanner').innerText = u.division_name;
       }
     }
 
+    // 5. LOGOUT
     function logout() {
       sessionStorage.removeItem('userData');
       location.reload();
+    }
+
+    // Fungsi utilitas dropdown divisi untuk bendahara
+    async function muatDropdownDivisi() {
+      const { data } = await client.from('divisions').select('*');
+      let select = document.getElementById('trfDivision');
+      select.innerHTML = '<option value="">Pilih Divisi...</option>';
+      if(data) {
+        data.forEach(d => {
+          select.innerHTML += `<option value="${d.id}">${d.name}</option>`;
+        });
+      }
+    }
+
+    // Dummy fungsi data (akan kita isi fungsionalitas aslinya satu per satu)
+    function muatDataAdmin() {
+      console.log("Memuat data admin...");
     }
   </script>
 </body>
