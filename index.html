@@ -83,6 +83,7 @@
         <li class="nav-item"><button class="nav-link rounded-pill px-3" data-bs-toggle="pill" data-bs-target="#adminTab2">Persetujuan Dana</button></li>
         <li class="nav-item"><button class="nav-link rounded-pill px-3" data-bs-toggle="pill" data-bs-target="#adminTab3">Belanja Lain-lain</button></li>
         <li class="nav-item"><button class="nav-link rounded-pill px-3" data-bs-toggle="pill" data-bs-target="#adminTab4">Rekap Kas & Pemasukan</button></li>
+        <li class="nav-item"><button class="nav-link rounded-pill px-3" data-bs-toggle="pill" data-bs-target="#adminTab5">Log Aktivitas</button></li>
       </ul>
 
       <div class="tab-content">
@@ -131,6 +132,12 @@
             <div id="adminTabelPemasukan" class="table-responsive">
               <p class="text-muted small">Memuat rincian...</p>
             </div>
+          </div>
+        </div>
+        <div class="tab-pane fade" id="adminTab5">
+          <div class="card border-0 shadow-sm rounded-4 p-4">
+            <h5 class="fw-bold mb-3">Riwayat Aktivitas Sistem (Audit Trail)</h5>
+            <div id="adminLogList" class="text-muted small">Memuat log aktivitas...</div>
           </div>
         </div>
       </div>
@@ -431,19 +438,45 @@
     });
 
     // ==========================================
-    // FUNGSI DIVISI: UPLOAD NOTA & REALISASI
-    // ==========================================
+    // FUNGSI DIVISI: UPLOAD NOTA & REALISASI DENGAN VALIDASI SALDO
     document.getElementById('formRealisasiDivisi').addEventListener('submit', async function(e) {
       e.preventDefault();
       
       const currentUser = JSON.parse(sessionStorage.getItem('userData'));
-      const amount = document.getElementById('divAmount').value.trim();
+      const amountInput = parseFloat(document.getElementById('divAmount').value.trim());
       const description = document.getElementById('divDesc').value.trim();
       const fileInput = document.getElementById('divFile');
       const submitBtn = e.target.querySelector('button[type="submit"]');
 
       if (fileInput.files.length === 0) {
         alert("Harap lampirkan foto bukti nota!");
+        return;
+      }
+
+      // 1. VALIDASI SALDO TERLEBIH DAHULU SEBELUM UPLOAD
+      // Ambil total transfer masuk ke divisi ini
+      const { data: transfers } = await client.from('budget_transfers').select('amount').eq('division_id', currentUser.division_id);
+      let totalTransfer = 0;
+      if (transfers) transfers.forEach(t => totalTransfer += Number(t.amount));
+
+      // Ambil total belanja yang sudah dilakukan divisi ini
+      const { data: expenses } = await client.from('expenses').select('amount').eq('division_id', currentUser.division_id);
+      let totalBelanja = 0;
+      if (expenses) expenses.forEach(ex => totalBelanja += Number(ex.amount));
+
+      // Ambil juga pagu dasar & tambahan yang disetujui (opsional sebagai batas maksimal pagu aktif)
+      const { data: divInfo } = await client.from('divisions').select('budget_limit').eq('id', currentUser.division_id).single();
+      const { data: reqs } = await client.from('budget_requests').select('amount').eq('division_id', currentUser.division_id).eq('status', 'approved');
+      
+      let tambahanDisetujui = 0;
+      if (reqs) reqs.forEach(r => tambahanDisetujui += Number(r.amount));
+      let paguAktif = Number(divInfo ? divInfo.budget_limit : 0) + tambahanDisetujui;
+
+      let sisaSaldo = totalTransfer - totalBelanja;
+
+      // Cek apakah belanja melebihi sisa saldo dana yang ada di tangan/diterima
+      if (amountInput > sisaSaldo) {
+        alert(`Gagal! Nominal belanja (Rp ${amountInput.toLocaleString('id-ID')}) melebihi sisa saldo dana yang tersedia (Rp ${sisaSaldo.toLocaleString('id-ID')}). Silakan ajukan tambahan anggaran ke Admin.`);
         return;
       }
 
@@ -456,39 +489,39 @@
       submitBtn.disabled = true;
 
       try {
-        // 1. UPLOAD KE BUCKET NOTA_TRANSAKSI
+        // 2. UPLOAD KE BUCKET NOTA_TRANSAKSI
         const { error: uploadError } = await client.storage
-          .from('nota_transaksi')
+          .from('NOTA_TRANSAKSI')
           .upload(filePath, file);
 
-        if (uploadError) {
-          throw new Error("Gagal upload gambar: " + uploadError.message);
-        }
+        if (uploadError) throw new Error("Gagal upload gambar: " + uploadError.message);
 
-        // 2. DAPATKAN PUBLIC URL
+        // 3. DAPATKAN PUBLIC URL
         const { data: urlData } = client.storage
-          .from('nota_transaksi')
+          .from('NOTA_TRANSAKSI')
           .getPublicUrl(filePath);
         
         const publicUrl = urlData.publicUrl;
 
-        // 3. SIMPAN KE TABEL EXPENSES
+        // 4. SIMPAN KE TABEL EXPENSES
         const { error: dbError } = await client
           .from('expenses')
           .insert([{
             division_id: currentUser.division_id,
             input_by_role: 'divisi',
-            amount: parseFloat(amount),
+            amount: amountInput,
             description: description,
             receipt_url: publicUrl
           }]);
 
-        if (dbError) {
-          throw new Error("Gagal menyimpan data ke database: " + dbError.message);
-        }
+        if (dbError) throw new Error("Gagal menyimpan data ke database: " + dbError.message);
+
+        // 5. CATAT KE LOG AKTIVITAS (Audit Trail)
+        await catatLogAktivitas(`Divisi ${currentUser.division_name} menginput realisasi belanja sebesar Rp ${amountInput.toLocaleString('id-ID')}`);
 
         alert("Laporan belanja dan nota berhasil dikirim!");
         document.getElementById('formRealisasiDivisi').reset();
+        muatDashboardDivisi(currentUser); // Refresh tampilan saldo/riwayat
 
       } catch (err) {
         alert(err.message);
@@ -805,8 +838,24 @@
       if (error) {
         alert("Gagal mengubah pagu: " + error.message);
       } else {
+        await catatLogAktivitas(`Admin memperbarui pagu anggaran divisi ID ${divisionId} menjadi Rp ${Number(nilaiBaru).toLocaleString('id-ID')}`);
         alert("Pagu anggaran berhasil diperbarui!");
         muatRekapSemuaDivisi();
+      }
+    }
+    // Ubah Status Pengajuan dengan Log
+    async function ubahStatusPengajuan(id, statusBaru) {
+      const { error } = await client
+        .from('budget_requests')
+        .update({ status: statusBaru })
+        .eq('id', id);
+
+      if (error) {
+        alert("Gagal memperbarui status: " + error.message);
+      } else {
+        await catatLogAktivitas(`Admin mengubah status pengajuan anggaran #${id} menjadi ${statusBaru.toUpperCase()}`);
+        alert("Status pengajuan berhasil diubah menjadi " + statusBaru);
+        muatDaftarPengajuanAdmin();
       }
     }
     // 2. Tampilkan & Kelola Pengajuan Tambahan Anggaran dari Divisi
@@ -1012,6 +1061,43 @@
 
       htmlTabel += `</tbody></table>`;
       document.getElementById('benTabelPemasukan').innerHTML = htmlTabel;
+    }
+    // Fungsi universal untuk mencatat log aktivitas
+    async function catatLogAktivitas(pesan) {
+      await client.from('activity_logs').insert([{ activity: pesan }]);
+    }
+    async function muatLogAktivitasAdmin() {
+      const { data, error } = await client
+        .from('activity_logs')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      const container = document.getElementById('adminLogList');
+      if (error || !data || data.length === 0) {
+        container.innerHTML = "Belum ada aktivitas tercatat.";
+        return;
+      }
+
+      let html = '<ul class="list-group list-group-flush">';
+      data.forEach(log => {
+        let tanggal = new Date(log.created_at).toLocaleString('id-ID');
+        html += `<li class="list-group-item d-flex justify-content-between align-items-start py-2">
+                  <div>${log.activity}</div>
+                  <span class="text-muted" style="font-size: 11px;">${tanggal}</span>
+                 </li>`;
+      });
+      html += '</ul>';
+      container.innerHTML = html;
+    }
+
+    // Panggil di muatDataAdmin()
+    async function muatDataAdmin() {
+      await muatRekapSemuaDivisi();
+      await muatDaftarPengajuanAdmin();
+      inisialisasiFormLainLain();
+      await muatRekapKasAdmin();
+      await muatLogAktivitasAdmin(); // <-- Ditambahkan
     }
   </script>
 </body>
