@@ -203,6 +203,18 @@
               <button type="submit" class="btn btn-success w-100 fw-bold">Kirim Dana ke Divisi</button>
             </form>
           </div>
+          <!-- Bagian Rekap Transfer & Kekurangan Pagu -->
+          <div class="card border-0 shadow-sm rounded-4 p-4">
+            <h5 class="fw-bold mb-3">Status Pencairan & Kekurangan Pagu Per Divisi</h5>
+            <div id="benTabelKekuranganPagu" class="table-responsive mb-4">
+              <p class="text-muted small">Memuat data kekurangan pagu...</p>
+            </div>
+
+            <h5 class="fw-bold mb-3">Riwayat Transfer ke Divisi</h5>
+            <div id="benRiwayatTransfer" class="table-responsive">
+              <p class="text-muted small">Memuat riwayat transfer...</p>
+            </div>
+          </div>
         </div>
         <div class="tab-pane fade" id="benTab3">
           <div class="card border-0 shadow-sm rounded-4 p-4">
@@ -1222,6 +1234,110 @@
       inisialisasiFormLainLain();
       await muatRekapKasAdmin();
       await muatLogAktivitasAdmin(); // <-- Ditambahkan
+    }
+    // Fungsi untuk memuat data rekap transfer dan kekurangan pagu divisi di tab 2 bendahara
+    async function muatDataTransferBendahara() {
+      // 1. Ambil data divisi, transfer, dan pengajuan disetujui (pagu aktif)
+      const { data: divisions } = await client.from('divisions').select('*');
+      const { data: transfers } = await client.from('budget_transfers').select('*, divisions(name)').order('created_at', { ascending: false });
+      const { data: requests } = await client.from('budget_requests').select('division_id, amount').eq('status', 'approved');
+
+      // A. Render Tabel Status Kekurangan Pagu per Divisi
+      const containerPagu = document.getElementById('benTabelKekuranganPagu');
+      if (divisions) {
+        let htmlPagu = `
+          <table class="table table-bordered table-sm align-middle text-nowrap">
+            <thead class="table-light">
+              <tr>
+                <th>Divisi</th>
+                <th>Pagu Aktif</th>
+                <th>Sudah Ditransfer</th>
+                <th>Kekurangan Belum Ditransfer</th>
+              </tr>
+            </thead>
+            <tbody>`;
+
+        let totalPaguSemua = 0;
+        let totalSudahTransfer = 0;
+        let totalKekuranganSemua = 0;
+
+        divisions.forEach(d => {
+          let paguDasar = Number(d.budget_limit || 0);
+          let tambahanDisetujui = 0;
+          if (requests) {
+            requests.filter(r => r.division_id === d.id).forEach(r => tambahanDisetujui += Number(r.amount));
+          }
+          let paguAktif = paguDasar + tambahanDisetujui;
+
+          let sudahTransfer = 0;
+          if (transfers) {
+            transfers.filter(t => t.division_id === d.id).forEach(t => sudahTransfer += Number(t.amount));
+          }
+
+          let kekurangan = paguAktif - sudahTransfer;
+
+          totalPaguSemua += paguAktif;
+          totalSudahTransfer += sudahTransfer;
+          totalKekuranganSemua += kekurangan;
+
+          htmlPagu += `
+            <tr>
+              <td class="fw-semibold">${d.name}</td>
+              <td>Rp ${paguAktif.toLocaleString('id-ID')}</td>
+              <td class="text-success">Rp ${sudahTransfer.toLocaleString('id-ID')}</td>
+              <td class="fw-bold ${kekurangan > 0 ? 'text-danger' : 'text-muted'}">Rp ${kekurangan.toLocaleString('id-ID')}</td>
+            </tr>`;
+        });
+
+        htmlPagu += `
+            </tbody>
+            <tfoot>
+              <tr class="table-dark fw-bold">
+                <td>TOTAL</td>
+                <td>Rp ${totalPaguSemua.toLocaleString('id-ID')}</td>
+                <td>Rp ${totalSudahTransfer.toLocaleString('id-ID')}</td>
+                <td>Rp ${totalKekuranganSemua.toLocaleString('id-ID')}</td>
+              </tr>
+            </tfoot>
+          </table>`;
+        containerPagu.innerHTML = htmlPagu;
+      }
+
+      // B. Render Riwayat Transfer
+      const containerRiwayat = document.getElementById('benRiwayatTransfer');
+      if (!transfers || transfers.length === 0) {
+        containerRiwayat.innerHTML = `<p class="text-muted small">Belum ada riwayat transfer dana.</p>`;
+        return;
+      }
+
+      let htmlRiwayat = `
+        <table class="table table-hover table-sm align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>Tanggal</th>
+              <th>Divisi Tujuan</th>
+              <th>Nominal</th>
+              <th>Catatan</th>
+            </tr>
+          </thead>
+          <tbody>`;
+
+      transfers.forEach(trf => {
+        let tanggal = new Date(trf.created_at).toLocaleDateString('id-ID');
+        let namaDiv = trf.divisions ? trf.divisions.name : 'Divisi Tidak Dikenal';
+        let nominal = Number(trf.amount);
+
+        htmlRiwayat += `
+          <tr>
+            <td class="text-muted small">${tanggal}</td>
+            <td class="fw-semibold">${namaDiv}</td>
+            <td class="fw-bold text-success">Rp ${nominal.toLocaleString('id-ID')}</td>
+            <td><small class="text-muted">${trf.description || '-'}</small></td>
+          </tr>`;
+      });
+
+      htmlRiwayat += `</tbody></table>`;
+      containerRiwayat.innerHTML = htmlRiwayat;
     }
   </script>
 </body>
