@@ -437,7 +437,7 @@
       try {
         // 1. UPLOAD KE BUCKET NOTA_TRANSAKSI
         const { error: uploadError } = await client.storage
-          .from('NOTA_TRANSAKSI')
+          .from('nota_transaksi')
           .upload(filePath, file);
 
         if (uploadError) {
@@ -446,7 +446,7 @@
 
         // 2. DAPATKAN PUBLIC URL
         const { data: urlData } = client.storage
-          .from('NOTA_TRANSAKSI')
+          .from('nota_transaksi')
           .getPublicUrl(filePath);
         
         const publicUrl = urlData.publicUrl;
