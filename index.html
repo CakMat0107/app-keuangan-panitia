@@ -626,17 +626,17 @@
       inisialisasiFormLainLain();
     }
 
-    // 1. Rekapitulasi Semua Divisi
+    // 1. Rekapitulasi Semua Divisi dengan Fitur Edit Pagu
     async function muatRekapSemuaDivisi() {
       const tbody = document.getElementById('adminTabelRekap');
       tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">Menghitung rekapitulasi data...</td></tr>`;
 
-      // Ambil semua data divisi
       const { data: divisions } = await client.from('divisions').select('*');
-      // Ambil data transfer
       const { data: transfers } = await client.from('budget_transfers').select('division_id, amount');
-      // Ambil data pengeluaran/belanja divisi
       const { data: expenses } = await client.from('expenses').select('division_id, amount');
+      
+      // Ambil juga total pengajuan yang sudah disetujui untuk menambah pagu otomatis
+      const { data: requests } = await client.from('budget_requests').select('division_id, amount').eq('status', 'approved');
 
       if (!divisions) {
         tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">Gagal memuat data divisi.</td></tr>`;
@@ -645,13 +645,21 @@
 
       let html = '';
       divisions.forEach(d => {
-        // Hitung total transfer ke divisi ini
+        let paguDasar = Number(d.budget_limit || 0);
+
+        // Tambahan otomatis dari pengajuan yang disetujui
+        let tambahanDisetujui = 0;
+        if (requests) {
+          requests.filter(r => r.division_id === d.id).forEach(r => tambahanDisetujui += Number(r.amount));
+        }
+
+        let totalPaguAktif = paguDasar + tambahanDisetujui;
+
         let totalTransfer = 0;
         if (transfers) {
           transfers.filter(t => t.division_id === d.id).forEach(t => totalTransfer += Number(t.amount));
         }
 
-        // Hitung total belanja divisi ini
         let totalBelanja = 0;
         if (expenses) {
           expenses.filter(e => e.division_id === d.id).forEach(e => totalBelanja += Number(e.amount));
@@ -662,7 +670,13 @@
         html += `
           <tr>
             <td class="fw-semibold">${d.name}</td>
-            <td><span class="text-muted">Rp -</span></td>
+            <td>
+              <div class="input-group input-group-sm" style="width: 140px;">
+                <input type="number" id="pagu_${d.id}" class="form-control" value="${paguDasar}">
+                <button class="btn btn-outline-primary" onclick="updatePagu(${d.id})" title="Simpan Pagu"><i class="bi bi-check"></i></button>
+              </div>
+              ${tambahanDisetujui > 0 ? `<small class="text-success" style="font-size: 10px;">+ Tambahan: Rp ${tambahanDisetujui.toLocaleString('id-ID')}</small>` : ''}
+            </td>
             <td>Rp ${totalTransfer.toLocaleString('id-ID')}</td>
             <td>Rp ${totalBelanja.toLocaleString('id-ID')}</td>
             <td><span class="fw-bold ${sisaSaldo < 0 ? 'text-danger' : 'text-primary'}">Rp ${sisaSaldo.toLocaleString('id-ID')}</span></td>
@@ -672,6 +686,22 @@
       tbody.innerHTML = html;
     }
 
+    // Fungsi untuk menyimpan perubahan Pagu dari Admin
+    async function updatePagu(divisionId) {
+      const nilaiBaru = document.getElementById(`pagu_${divisionId}`).value;
+
+      const { error } = await client
+        .from('divisions')
+        .update({ budget_limit: parseFloat(nilaiBaru) })
+        .eq('id', divisionId);
+
+      if (error) {
+        alert("Gagal mengubah pagu: " + error.message);
+      } else {
+        alert("Pagu anggaran berhasil diperbarui!");
+        muatRekapSemuaDivisi();
+      }
+    }
     // 2. Tampilkan & Kelola Pengajuan Tambahan Anggaran dari Divisi
     async function muatDaftarPengajuanAdmin() {
       const container = document.getElementById('adminListPengajuan');
