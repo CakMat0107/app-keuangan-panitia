@@ -343,6 +343,7 @@
         document.getElementById('bendaharaSection').style.display = 'block';
         document.getElementById('roleTitleBadge').innerText = "BENDAHARA";
         muatDropdownDivisi();
+        muatRekapBendahara(); // <-- Tambahkan baris ini
       } else if (u.role === 'divisi') {
         document.getElementById('divisiSection').style.display = 'block';
         document.getElementById('roleTitleBadge').innerText = u.division_name.toUpperCase();
