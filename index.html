@@ -82,6 +82,7 @@
         <li class="nav-item"><button class="nav-link active rounded-pill px-3" data-bs-toggle="pill" data-bs-target="#adminTab1">Rekap & Saldo</button></li>
         <li class="nav-item"><button class="nav-link rounded-pill px-3" data-bs-toggle="pill" data-bs-target="#adminTab2">Persetujuan Dana</button></li>
         <li class="nav-item"><button class="nav-link rounded-pill px-3" data-bs-toggle="pill" data-bs-target="#adminTab3">Belanja Lain-lain</button></li>
+        <li class="nav-item"><button class="nav-link rounded-pill px-3" data-bs-toggle="pill" data-bs-target="#adminTab4">Rekap Kas & Pemasukan</button></li>
       </ul>
 
       <div class="tab-content">
@@ -119,6 +120,17 @@
           <div class="card border-0 shadow-sm rounded-4 p-4">
             <h5 class="fw-bold mb-3">Input Pengeluaran Lain-Lain (Operasional Umum)</h5>
             <p class="text-muted small">Pengeluaran di luar pagu divisi tertentu.</p>
+          </div>
+        </div>
+        <div class="tab-pane fade" id="adminTab4">
+          <div class="card border-0 shadow-sm rounded-4 p-4">
+            <h5 class="fw-bold mb-3">Rekapitulasi Pemasukan Kas & Saldo Bendahara (Pusat)</h5>
+            <div id="adminRingkasanKas" class="mb-4">Memuat ringkasan kas...</div>
+            <hr>
+            <h6 class="fw-bold mb-2">Rincian Pengelompokan Pemasukan</h6>
+            <div id="adminTabelPemasukan" class="table-responsive">
+              <p class="text-muted small">Memuat rincian...</p>
+            </div>
           </div>
         </div>
       </div>
@@ -632,8 +644,82 @@
       await muatRekapSemuaDivisi();
       await muatDaftarPengajuanAdmin();
       inisialisasiFormLainLain();
+      await muatRekapKasAdmin(); // <-- Tambahkan baris ini
     }
+    // Fungsi khusus untuk menampilkan rekap kas di Dashboard Admin
+    async function muatRekapKasAdmin() {
+      const { data: incomes } = await client.from('incomes').select('*').order('created_at', { ascending: false });
+      const { data: transfers } = await client.from('budget_transfers').select('amount');
 
+      let totalPemasukan = 0;
+      let totalKeluarTransfer = 0;
+      let kelompokSumber = {};
+
+      if (incomes) {
+        incomes.forEach(inc => {
+          let nominal = Number(inc.amount);
+          totalPemasukan += nominal;
+
+          let sumber = inc.source ? inc.source.trim() : 'Lain-lain';
+          if (!kelompokSumber[sumber]) {
+            kelompokSumber[sumber] = { total: 0, count: 0 };
+          }
+          kelompokSumber[sumber].total += nominal;
+          kelompokSumber[sumber].count += 1;
+        });
+      }
+
+      if (transfers) {
+        transfers.forEach(t => totalKeluarTransfer += Number(t.amount));
+      }
+
+      let sisaKasPusat = totalPemasukan - totalKeluarTransfer;
+
+      // Render Kartu Ringkasan
+      document.getElementById('adminRingkasanKas').innerHTML = `
+        <div class="row text-center g-2">
+          <div class="col-md-4 p-3 bg-light rounded shadow-sm">
+            <small class="text-muted">Total Pemasukan Kas</small>
+            <h4 class="fw-bold text-success mb-0">Rp ${totalPemasukan.toLocaleString('id-ID')}</h4>
+          </div>
+          <div class="col-md-4 p-3 bg-light rounded shadow-sm">
+            <small class="text-muted">Total Keluar (Transfer)</small>
+            <h4 class="fw-bold text-danger mb-0">Rp ${totalKeluarTransfer.toLocaleString('id-ID')}</h4>
+          </div>
+          <div class="col-md-4 p-3 bg-light rounded shadow-sm">
+            <small class="text-muted">Sisa Kas di Bendahara</small>
+            <h4 class="fw-bold text-primary mb-0">Rp ${sisaKasPusat.toLocaleString('id-ID')}</h4>
+          </div>
+        </div>`;
+
+      // Render Tabel Pengelompokan
+      let htmlTabel = `
+        <table class="table table-bordered table-sm align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>Kelompok / Sumber Pemasukan</th>
+              <th class="text-center">Jumlah Transaksi</th>
+              <th>Total Nominal</th>
+            </tr>
+          </thead>
+          <tbody>`;
+
+      if (Object.keys(kelompokSumber).length > 0) {
+        for (let [sumber, info] of Object.entries(kelompokSumber)) {
+          htmlTabel += `
+            <tr>
+              <td class="fw-semibold">${sumber}</td>
+              <td class="text-center"><span class="badge bg-secondary">${info.count}x</span></td>
+              <td class="fw-bold text-success">Rp ${info.total.toLocaleString('id-ID')}</td>
+            </tr>`;
+        }
+      } else {
+        htmlTabel += `<tr><td colspan="3" class="text-center text-muted">Belum ada data pemasukan.</td></tr>`;
+      }
+
+      htmlTabel += `</tbody></table>`;
+      document.getElementById('adminTabelPemasukan').innerHTML = htmlTabel;
+    }
     // 1. Rekapitulasi Semua Divisi dengan Baris Total Akumulasi
     async function muatRekapSemuaDivisi() {
       const tbody = document.getElementById('adminTabelRekap');
