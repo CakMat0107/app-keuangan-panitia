@@ -116,7 +116,6 @@
           <div class="card border-0 shadow-sm rounded-4 p-4">
             <h5 class="fw-bold mb-3">Input Pengeluaran Lain-Lain (Operasional Umum)</h5>
             <p class="text-muted small">Pengeluaran di luar pagu divisi tertentu.</p>
-            <!-- Form Input Lain-lain akan ditaruh di sini -->
           </div>
         </div>
       </div>
@@ -226,7 +225,7 @@
               <div class="mb-3">
                 <label class="form-label">Foto Bukti Nota / Transaksi</label>
                 <input type="file" id="divFile" class="form-control" accept="image/*" required>
-                <div class="form-text">Format gambar (JPG/PNG). Maksimal ukuran file wajar.</div>
+                <div class="form-text">Format gambar (JPG/PNG).</div>
               </div>
               <button type="submit" class="btn btn-warning w-100 fw-bold text-dark">Kirim Laporan Belanja</button>
             </form>
@@ -350,7 +349,7 @@
       location.reload();
     }
 
-    // Fungsi utilitas dropdown divisi untuk bendahara
+    // Dropdown divisi untuk bendahara
     async function muatDropdownDivisi() {
       const { data } = await client.from('divisions').select('*');
       let select = document.getElementById('trfDivision');
@@ -362,18 +361,15 @@
       }
     }
 
-    // Dummy fungsi data (akan kita isi fungsionalitas aslinya satu per satu)
     function muatDataAdmin() {
       console.log("Memuat data admin...");
     }
-    // ==========================================
-    // FUNGSI-FUNGSI UNTUK BENDAHARA
-    // ==========================================
 
-    // 1. Simpan Pemasukan (Iuran / Donatur)
+    // ==========================================
+    // FUNGSI BENDAHARA: INPUT PEMASUKAN & TRANSFER
+    // ==========================================
     document.getElementById('formPemasukan').addEventListener('submit', async function(e) {
       e.preventDefault();
-      
       const source = document.getElementById('incSource').value.trim();
       const amount = document.getElementById('incAmount').value.trim();
       const description = document.getElementById('incDesc').value.trim();
@@ -390,10 +386,8 @@
       }
     });
 
-    // 2. Transfer Dana ke Divisi
     document.getElementById('formTransfer').addEventListener('submit', async function(e) {
       e.preventDefault();
-      
       const division_id = document.getElementById('trfDivision').value;
       const amount = document.getElementById('trfAmount').value.trim();
       const description = document.getElementById('trfDesc').value.trim();
@@ -414,21 +408,74 @@
         document.getElementById('formTransfer').reset();
       }
     });
-    // 1. UPLOAD FILE KE SUPABASE STORAGE (Disesuaikan dengan bucket Anda)
-        const { data: uploadData, error: uploadError } = await client.storage
-          .from('NOTA_TRANSAKSI') // <-- Menggunakan bucket Anda
+
+    // ==========================================
+    // FUNGSI DIVISI: UPLOAD NOTA & REALISASI
+    // ==========================================
+    document.getElementById('formRealisasiDivisi').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const currentUser = JSON.parse(sessionStorage.getItem('userData'));
+      const amount = document.getElementById('divAmount').value.trim();
+      const description = document.getElementById('divDesc').value.trim();
+      const fileInput = document.getElementById('divFile');
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+
+      if (fileInput.files.length === 0) {
+        alert("Harap lampirkan foto bukti nota!");
+        return;
+      }
+
+      const file = fileInput.files[0];
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${currentUser.division_name}_${Date.now()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      submitBtn.innerText = "Mengunggah Nota...";
+      submitBtn.disabled = true;
+
+      try {
+        // 1. UPLOAD KE BUCKET NOTA_TRANSAKSI
+        const { error: uploadError } = await client.storage
+          .from('NOTA_TRANSAKSI')
           .upload(filePath, file);
 
         if (uploadError) {
           throw new Error("Gagal upload gambar: " + uploadError.message);
         }
 
-        // 2. DAPATKAN PUBLIC URL DARI FILE YANG DI-UPLOAD
+        // 2. DAPATKAN PUBLIC URL
         const { data: urlData } = client.storage
-          .from('NOTA_TRANSAKSI') // <-- Menggunakan bucket Anda
+          .from('NOTA_TRANSAKSI')
           .getPublicUrl(filePath);
         
         const publicUrl = urlData.publicUrl;
+
+        // 3. SIMPAN KE TABEL EXPENSES
+        const { error: dbError } = await client
+          .from('expenses')
+          .insert([{
+            division_id: currentUser.division_id,
+            input_by_role: 'divisi',
+            amount: parseFloat(amount),
+            description: description,
+            receipt_url: publicUrl
+          }]);
+
+        if (dbError) {
+          throw new Error("Gagal menyimpan data ke database: " + dbError.message);
+        }
+
+        alert("Laporan belanja dan nota berhasil dikirim!");
+        document.getElementById('formRealisasiDivisi').reset();
+
+      } catch (err) {
+        alert(err.message);
+      } finally {
+        submitBtn.innerText = "Kirim Laporan Belanja";
+        submitBtn.disabled = false;
+      }
+    });
   </script>
 </body>
 </html>
