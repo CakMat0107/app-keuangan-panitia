@@ -88,6 +88,9 @@
         <div class="tab-pane fade show active" id="adminTab1">
           <div class="card border-0 shadow-sm rounded-4 p-3">
             <h5 class="fw-bold mb-3">Rekapitulasi Anggaran & Realisasi Per Divisi</h5>
+            <button class="btn btn-dark btn-sm fw-bold" onclick="cetakLaporanLPJ()">
+                <i class="bi bi-printer me-1"></i> Cetak / Unduh LPJ
+             </button>
             <div class="table-responsive">
               <table class="table table-hover align-middle">
                 <thead class="table-light">
@@ -805,6 +808,29 @@
           muatRekapSemuaDivisi(); // Refresh tabel rekap
         }
       });
+    }
+    // Fungsi untuk Mencetak Laporan Pertanggungjawaban (LPJ)
+    function cetakLaporanLPJ() {
+      const originalContent = document.body.innerHTML;
+      
+      // Ambil elemen tabel rekap saja untuk dicetak
+      const rekapDiv = document.querySelector('#adminTab1 .card').innerHTML;
+      
+      // Buat jendela cetak sementara dengan kop surat sederhana
+      const printWindow = window.open('', '', 'height=700,width=900');
+      printWindow.document.write('<html><head><title>Laporan Pertanggungjawaban Keuangan Panitia</title>');
+      printWindow.document.write('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">');
+      printWindow.document.write('</head><body class="p-4">');
+      printWindow.document.write('<div class="text-center mb-4"><h3>LAPORAN PERTANGGUNGJAWABAN KEUANGAN PANITIA</h3><p class="text-muted">Rekapitulasi Realisasi Anggaran Per Divisi</p></div>');
+      printWindow.document.write(rekapDiv);
+      printWindow.document.write('</body></html>');
+      printWindow.document.close();
+      
+      // Tunggu sebentar agar bootstrap termuat lalu panggil dialog print browser (bisa simpan as PDF)
+      setTimeout(() => {
+        printWindow.print();
+        printWindow.close();
+      }, 500);
     }
   </script>
 </body>
