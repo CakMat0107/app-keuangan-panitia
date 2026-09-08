@@ -938,11 +938,13 @@
       }
     }
 
-    // 3. Form Input Belanja Lain-Lain (Operasional Umum oleh Admin)
-    function inisialisasiFormLainLain() {
+    // 3. Form & Tabel Rekap Pengeluaran Lain-Lain (Operasional Umum oleh Admin)
+    async function inisialisasiFormLainLain() {
       const tab3 = document.getElementById('adminTab3');
+      
+      // Render Form Input sekaligus wadah daftar rekap belanja lain-lain
       tab3.innerHTML = `
-        <div class="card border-0 shadow-sm rounded-4 p-4">
+        <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
           <h5 class="fw-bold mb-3">Input Pengeluaran Lain-Lain (Operasional Umum)</h5>
           <p class="text-muted small">Catat pengeluaran di luar pagu divisi tertentu (misal: konsumsi rapat panitia inti).</p>
           <form id="formAdminLainLain">
@@ -956,8 +958,19 @@
             </div>
             <button type="submit" class="btn btn-primary w-100 fw-bold">Simpan Pengeluaran Lain-Lain</button>
           </form>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4 p-4">
+          <h5 class="fw-bold mb-3">Daftar Riwayat Belanja Lain-Lain</h5>
+          <div id="tabelRekapLainLain" class="table-responsive">
+            <p class="text-muted small">Memuat riwayat...</p>
+          </div>
         </div>`;
 
+      // Muat data riwayat ke dalam tabel
+      await muatRiwayatLainLain();
+
+      // Event listener submit form lain-lain
       document.getElementById('formAdminLainLain').addEventListener('submit', async function(e) {
         e.preventDefault();
         const amount = document.getElementById('admAmount').value.trim();
@@ -969,18 +982,76 @@
             division_id: null, // Null karena ini pengeluaran umum admin
             input_by_role: 'admin',
             amount: parseFloat(amount),
-            description: '[Lain-Lain Admin] ' + desc,
+            description: desc, // Disimpan murni, tanpa prefix hardcode agar rapi
             receipt_url: null
           }]);
 
         if (error) {
           alert("Gagal menyimpan pengeluaran: " + error.message);
         } else {
+          await catatLogAktivitas(`Admin mencatat pengeluaran lain-lain sebesar Rp ${Number(amount).toLocaleString('id-ID')} (${desc})`);
           alert("Pengeluaran lain-lain berhasil dicatat!");
           document.getElementById('formAdminLainLain').reset();
-          muatRekapSemuaDivisi(); // Refresh tabel rekap
+          
+          // Refresh tabel rekap lain-lain dan tabel rekap utama
+          await muatRiwayatLainLain();
+          await muatRekapSemuaDivisi(); 
         }
       });
+    }
+
+    // Fungsi untuk menarik dan menampilkan daftar riwayat belanja lain-lain
+    async function muatRiwayatLainLain() {
+      const container = document.getElementById('tabelRekapLainLain');
+      if (!container) return;
+
+      const { data, error } = await client
+        .from('expenses')
+        .select('*')
+        .is('division_id', null) // Ambil yang division_id nya null (lain-lain admin)
+        .order('created_at', { ascending: false });
+
+      if (error || !data || data.length === 0) {
+        container.innerHTML = `<p class="text-muted small">Belum ada riwayat pengeluaran lain-lain.</p>`;
+        return;
+      }
+
+      let totalLain = 0;
+      let html = `
+        <table class="table table-hover table-sm align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>Tanggal</th>
+              <th>Uraian / Keterangan</th>
+              <th>Nominal</th>
+            </tr>
+          </thead>
+          <tbody>`;
+
+      data.forEach(item => {
+        let nominal = Number(item.amount);
+        totalLain += nominal;
+        let tanggal = new Date(item.created_at).toLocaleDateString('id-ID');
+
+        html += `
+          <tr>
+            <td class="text-muted small">${tanggal}</td>
+            <td>${item.description}</td>
+            <td class="fw-bold text-danger">Rp ${nominal.toLocaleString('id-ID')}</td>
+          </tr>`;
+      });
+
+      html += `
+          </tbody>
+          <tfoot>
+            <tr class="table-light fw-bold">
+              <td colspan="2" class="text-end">Total Pengeluaran Lain-Lain:</td>
+              <td class="text-danger">Rp ${totalLain.toLocaleString('id-ID')}</td>
+            </tr>
+          </tfoot>
+        </table>`;
+
+      container.innerHTML = html;
     }
     // Fungsi untuk Mencetak Laporan Pertanggungjawaban (LPJ)
     function cetakLaporanLPJ() {
