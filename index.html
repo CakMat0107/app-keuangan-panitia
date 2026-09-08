@@ -414,6 +414,21 @@
         document.getElementById('formTransfer').reset();
       }
     });
+    // 1. UPLOAD FILE KE SUPABASE STORAGE (Disesuaikan dengan bucket Anda)
+        const { data: uploadData, error: uploadError } = await client.storage
+          .from('NOTA_TRANSAKSI') // <-- Menggunakan bucket Anda
+          .upload(filePath, file);
+
+        if (uploadError) {
+          throw new Error("Gagal upload gambar: " + uploadError.message);
+        }
+
+        // 2. DAPATKAN PUBLIC URL DARI FILE YANG DI-UPLOAD
+        const { data: urlData } = client.storage
+          .from('NOTA_TRANSAKSI') // <-- Menggunakan bucket Anda
+          .getPublicUrl(filePath);
+        
+        const publicUrl = urlData.publicUrl;
   </script>
 </body>
 </html>
