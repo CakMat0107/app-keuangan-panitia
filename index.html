@@ -375,6 +375,7 @@
         document.getElementById('roleTitleBadge').innerText = "BENDAHARA";
         muatDropdownDivisi();
         muatRekapBendahara(); // <-- Tambahkan baris ini
+        muatDataTransferBendahara(); // <-- Tambahkan baris ini
       } else if (u.role === 'divisi') {
         document.getElementById('divisiSection').style.display = 'block';
         document.getElementById('roleTitleBadge').innerText = u.division_name.toUpperCase();
@@ -423,6 +424,7 @@
       } else {
         alert("Pemasukan berhasil dicatat!");
         document.getElementById('formPemasukan').reset();
+        muatDataTransferBendahara(); // <-- Refresh tabel otomatis
       }
     });
 
