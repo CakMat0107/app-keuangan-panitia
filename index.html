@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Keuangan Panitia</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Supabase CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="bg-light p-4">
@@ -53,10 +54,11 @@
   </div>
 
   <script>
-    // URL dan Key Anda (sudah benar)
     const SUPABASE_URL = 'https://nffrxxkydlsvtbliqalv.supabase.co'; 
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5mZnJ4eGt5ZGxzdnRibGlxYWx2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg4MzI1NTcsImV4cCI6MjEwNDQwODU1N30.s5YBFQ7W1KRKba3MMRFl-q42nRRApak_3QLd7S4B85A'; 
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    
+    // PERBAIKAN: Gunakan window.supabase dan ganti nama variabel jadi "client"
+    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     window.onload = function() {
       const savedUser = sessionStorage.getItem('userData');
@@ -77,7 +79,8 @@
       btn.innerText = "Memeriksa..."; btn.disabled = true; status.innerText = "";
 
       try {
-        const { data, error } = await supabase
+        // PERBAIKAN: Gunakan "client.from", bukan "supabase.from"
+        const { data, error } = await client
           .from('app_users')
           .select('id, username, role, division_id, divisions(name)')
           .eq('username', user)
@@ -86,7 +89,7 @@
         if (error) throw new Error("Gagal menghubungi server.");
         if (!data || data.length === 0) throw new Error("Username atau password salah!");
 
-        const userAsli = data[0]; // Ambil data pertama
+        const userAsli = data[0]; 
         const userData = {
           id: userAsli.id,
           role: userAsli.role,
