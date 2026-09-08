@@ -476,6 +476,144 @@
         submitBtn.disabled = false;
       }
     });
+    // ==========================================
+    // FUNGSI DIVISI: SALDO, RIWAYAT & PENGAJUAN
+    // ==========================================
+
+    // Panggil fungsi ini di dalam fungsi tampilkanHalaman ketika role == 'divisi'
+    async function muatDashboardDivisi(u) {
+      await muatSaldoDanRiwayatDivisi(u.division_id);
+      await muatDaftarPengajuanDivisi(u.division_id);
+    }
+
+    // 1. Ambil & Hitung Saldo serta Riwayat Belanja Divisi
+    async function muatSaldoDanRiwayatDivisi(divisionId) {
+      // Ambil total dana masuk (transfer dari bendahara)
+      const { data: transfers } = await client
+        .from('budget_transfers')
+        .select('amount, description, created_at')
+        .eq('division_id', divisionId);
+
+      let totalTransfer = 0;
+      if (transfers) {
+        transfers.forEach(t => totalTransfer += Number(t.amount));
+      }
+
+      // Ambil total realisasi belanja divisi
+      const { data: expenses } = await client
+        .from('expenses')
+        .select('amount, description, receipt_url, created_at')
+        .eq('division_id', divisionId)
+        .order('created_at', { ascending: false });
+
+      let totalBelanja = 0;
+      let htmlRiwayat = "";
+      
+      if (expenses && expenses.length > 0) {
+        expenses.forEach(ex => {
+          totalBelanja += Number(ex.amount);
+          htmlRiwayat += `
+            <div class="p-2 mb-2 border rounded bg-white shadow-sm">
+              <div class="d-flex justify-content-between">
+                <strong>Rp ${Number(ex.amount).toLocaleString('id-ID')}</strong>
+                <small class="text-muted">${new Date(ex.created_at).toLocaleDateString('id-ID')}</small>
+              </div>
+              <p class="mb-1 small">${ex.description}</p>
+              <a href="${ex.receipt_url}" target="_blank" class="text-decoration-none small text-primary">
+                <i class="bi bi-file-earmark-image"></i> Lihat Nota
+              </a>
+            </div>`;
+        });
+      } else {
+        htmlRiwayat = "<span class='text-muted small'>Belum ada riwayat belanja.</span>";
+      }
+
+      // Hitung sisa saldo (Transfer - Belanja)
+      let sisaSaldo = totalTransfer - totalBelanja;
+
+      // Render ke Tampilan
+      document.getElementById('divSaldoContent').innerHTML = `
+        <div class="row text-center">
+          <div class="col-6 p-2 bg-light rounded">
+            <small class="text-muted">Total Diterima</small>
+            <h5 class="fw-bold text-success mb-0">Rp ${totalTransfer.toLocaleString('id-ID')}</h5>
+          </div>
+          <div class="col-6 p-2 bg-light rounded">
+            <small class="text-muted">Sisa Saldo</small>
+            <h5 class="fw-bold text-primary mb-0">Rp ${sisaSaldo.toLocaleString('id-ID')}</h5>
+          </div>
+        </div>`;
+      
+      document.getElementById('divRiwayatList').innerHTML = htmlRiwayat;
+    }
+
+    // 2. Kirim Pengajuan Tambahan Anggaran
+    document.getElementById('formPengajuan').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const currentUser = JSON.parse(sessionStorage.getItem('userData'));
+      const amount = document.getElementById('reqAmount').value.trim();
+      const reason = document.getElementById('reqReason').value.trim();
+
+      const { error } = await client
+        .from('budget_requests')
+        .insert([{
+          division_id: currentUser.division_id,
+          amount: parseFloat(amount),
+          reason: reason,
+          status: 'pending'
+        }]);
+
+      if (error) {
+        alert("Gagal mengirim pengajuan: " + error.message);
+      } else {
+        alert("Pengajuan tambahan anggaran berhasil dikirim ke Admin!");
+        document.getElementById('formPengajuan').reset();
+        muatDaftarPengajuanDivisi(currentUser.division_id);
+      }
+    });
+
+    // 3. Tampilkan Status & Riwayat Pengajuan Divisi
+    async function muatDaftarPengajuanDivisi(divisionId) {
+      const { data, error } = await client
+        .from('budget_requests')
+        .select('*')
+        .eq('division_id', divisionId)
+        .order('created_at', { ascending: false });
+
+      // Kita buat elemen penampung status pengajuan di tab 3 jika belum ada
+      let container = document.getElementById('divStatusPengajuanList');
+      if (!container) {
+        const tab3 = document.getElementById('divTab3');
+        container = document.createElement('div');
+        container.id = 'divStatusPengajuanList';
+        container.className = 'mt-4 pt-3 border-top';
+        tab3.appendChild(container);
+      }
+
+      if (!data || data.length === 0) {
+        container.innerHTML = `<h6 class="fw-bold mb-2">Status Pengajuan Anda</h6><p class="text-muted small">Belum ada riwayat pengajuan.</p>`;
+        return;
+      }
+
+      let html = `<h6 class="fw-bold mb-2">Status Pengajuan Anda</h6>`;
+      data.forEach(req => {
+        let badgeColor = 'bg-warning text-dark';
+        if (req.status === 'approved') badgeColor = 'bg-success text-white';
+        if (req.status === 'rejected') badgeColor = 'bg-danger text-white';
+
+        html += `
+          <div class="p-2 mb-2 border rounded bg-white shadow-sm">
+            <div class="d-flex justify-content-between align-items-center">
+              <strong>Rp ${Number(req.amount).toLocaleString('id-ID')}</strong>
+              <span class="badge ${badgeColor}">${req.status.toUpperCase()}</span>
+            </div>
+            <p class="mb-1 small text-muted">${req.reason}</p>
+            <small class="text-secondary" style="font-size: 11px;">Diajukan pada: ${new Date(req.created_at).toLocaleDateString('id-ID')}</small>
+          </div>`;
+      });
+
+      container.innerHTML = html;
+    }
   </script>
 </body>
 </html>
