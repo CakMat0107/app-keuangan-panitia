@@ -615,6 +615,167 @@
 
       container.innerHTML = html;
     }
+    // ==========================================
+    // FUNGSI ADMIN: REKAP, PERSETUJUAN & LAIN-LAIN
+    // ==========================================
+
+    // Panggil fungsi utama admin saat role == 'admin'
+    async function muatDataAdmin() {
+      await muatRekapSemuaDivisi();
+      await muatDaftarPengajuanAdmin();
+      inisialisasiFormLainLain();
+    }
+
+    // 1. Rekapitulasi Semua Divisi
+    async function muatRekapSemuaDivisi() {
+      const tbody = document.getElementById('adminTabelRekap');
+      tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">Menghitung rekapitulasi data...</td></tr>`;
+
+      // Ambil semua data divisi
+      const { data: divisions } = await client.from('divisions').select('*');
+      // Ambil data transfer
+      const { data: transfers } = await client.from('budget_transfers').select('division_id, amount');
+      // Ambil data pengeluaran/belanja divisi
+      const { data: expenses } = await client.from('expenses').select('division_id, amount');
+
+      if (!divisions) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">Gagal memuat data divisi.</td></tr>`;
+        return;
+      }
+
+      let html = '';
+      divisions.forEach(d => {
+        // Hitung total transfer ke divisi ini
+        let totalTransfer = 0;
+        if (transfers) {
+          transfers.filter(t => t.division_id === d.id).forEach(t => totalTransfer += Number(t.amount));
+        }
+
+        // Hitung total belanja divisi ini
+        let totalBelanja = 0;
+        if (expenses) {
+          expenses.filter(e => e.division_id === d.id).forEach(e => totalBelanja += Number(e.amount));
+        }
+
+        let sisaSaldo = totalTransfer - totalBelanja;
+
+        html += `
+          <tr>
+            <td class="fw-semibold">${d.name}</td>
+            <td><span class="text-muted">Rp -</span></td>
+            <td>Rp ${totalTransfer.toLocaleString('id-ID')}</td>
+            <td>Rp ${totalBelanja.toLocaleString('id-ID')}</td>
+            <td><span class="fw-bold ${sisaSaldo < 0 ? 'text-danger' : 'text-primary'}">Rp ${sisaSaldo.toLocaleString('id-ID')}</span></td>
+          </tr>`;
+      });
+
+      tbody.innerHTML = html;
+    }
+
+    // 2. Tampilkan & Kelola Pengajuan Tambahan Anggaran dari Divisi
+    async function muatDaftarPengajuanAdmin() {
+      const container = document.getElementById('adminListPengajuan');
+      
+      const { data, error } = await client
+        .from('budget_requests')
+        .select('*, divisions(name)')
+        .order('created_at', { ascending: false });
+
+      if (error || !data || data.length === 0) {
+        container.innerHTML = `<p class="text-muted small">Belum ada pengajuan tambahan anggaran.</p>`;
+        return;
+      }
+
+      let html = '';
+      data.forEach(req => {
+        let divName = req.divisions ? req.divisions.name : 'Divisi Tidak Dikenal';
+        let actionButtons = '';
+
+        if (req.status === 'pending') {
+          actionButtons = `
+            <div class="mt-2">
+              <button class="btn btn-success btn-sm me-2 fw-bold" onclick="ubahStatusPengajuan(${req.id}, 'approved')">Setujui</button>
+              <button class="btn btn-danger btn-sm fw-bold" onclick="ubahStatusPengajuan(${req.id}, 'rejected')">Tolak</button>
+            </div>`;
+        } else {
+          let badgeColor = req.status === 'approved' ? 'bg-success' : 'bg-danger';
+          actionButtons = `<div class="mt-2"><span class="badge ${badgeColor}">${req.status.toUpperCase()}</span></div>`;
+        }
+
+        html += `
+          <div class="p-3 mb-3 border rounded bg-white shadow-sm">
+            <div class="d-flex justify-content-between align-items-center">
+              <h6 class="fw-bold text-primary mb-1">Divisi: ${divName}</h6>
+              <span class="fs-5 fw-bold text-dark">Rp ${Number(req.amount).toLocaleString('id-ID')}</span>
+            </div>
+            <p class="mb-1 text-muted small"><strong>Alasan:</strong> ${req.reason}</p>
+            <small class="text-secondary" style="font-size: 11px;">Diajukan pada: ${new Date(req.created_at).toLocaleDateString('id-ID')}</small>
+            ${actionButtons}
+          </div>`;
+      });
+
+      container.innerHTML = html;
+    }
+
+    // Fungsi Ubah Status Pengajuan (Disetujui/Ditolak)
+    async function ubahStatusPengajuan(id, statusBaru) {
+      const { error } = await client
+        .from('budget_requests')
+        .update({ status: statusBaru })
+        .eq('id', id);
+
+      if (error) {
+        alert("Gagal memperbarui status: " + error.message);
+      } else {
+        alert("Status pengajuan berhasil diubah menjadi " + statusBaru);
+        muatDaftarPengajuanAdmin();
+      }
+    }
+
+    // 3. Form Input Belanja Lain-Lain (Operasional Umum oleh Admin)
+    function inisialisasiFormLainLain() {
+      const tab3 = document.getElementById('adminTab3');
+      tab3.innerHTML = `
+        <div class="card border-0 shadow-sm rounded-4 p-4">
+          <h5 class="fw-bold mb-3">Input Pengeluaran Lain-Lain (Operasional Umum)</h5>
+          <p class="text-muted small">Catat pengeluaran di luar pagu divisi tertentu (misal: konsumsi rapat panitia inti).</p>
+          <form id="formAdminLainLain">
+            <div class="mb-3">
+              <label class="form-label">Nominal Pengeluaran (Rp)</label>
+              <input type="number" id="admAmount" class="form-control" placeholder="0" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Uraian / Keterangan Keperluan</label>
+              <textarea id="admDesc" class="form-control" rows="2" placeholder="Contoh: Pembelian kesekretariatan umum..." required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary w-100 fw-bold">Simpan Pengeluaran Lain-Lain</button>
+          </form>
+        </div>`;
+
+      document.getElementById('formAdminLainLain').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const amount = document.getElementById('admAmount').value.trim();
+        const desc = document.getElementById('admDesc').value.trim();
+
+        const { error } = await client
+          .from('expenses')
+          .insert([{
+            division_id: null, // Null karena ini pengeluaran umum admin
+            input_by_role: 'admin',
+            amount: parseFloat(amount),
+            description: '[Lain-Lain Admin] ' + desc,
+            receipt_url: null
+          }]);
+
+        if (error) {
+          alert("Gagal menyimpan pengeluaran: " + error.message);
+        } else {
+          alert("Pengeluaran lain-lain berhasil dicatat!");
+          document.getElementById('formAdminLainLain').reset();
+          muatRekapSemuaDivisi(); // Refresh tabel rekap
+        }
+      });
+    }
   </script>
 </body>
 </html>
