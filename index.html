@@ -3,1165 +3,183 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sistem Keuangan Terpadu Panitia</title>
-  <!-- Bootstrap 5 CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <!-- Bootstrap Icons -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-  <!-- Supabase JS -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <title>Persuratan Yayasan Sunan Giri</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    :root { --ink:#18324b; --muted:#6c8293; --navy:#123d5a; --teal:#159a8c; --gold:#e7ad43; --soft:#f4f8fa; --line:#e4edf1; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:#f5f8fa; color:var(--ink); font-family:"DM Sans",sans-serif; }
+    h1,h2,h3,h4,h5,h6,.brand { font-family:"Plus Jakarta Sans",sans-serif; }
+    .app-shell { min-height:100vh; display:flex; }
+    .sidebar { width:262px; background:linear-gradient(180deg,#123d5a 0%,#0b3048 100%); color:#dcecf2; padding:25px 16px; position:fixed; inset:0 auto 0 0; z-index:10; }
+    .brand { display:flex; gap:11px; align-items:center; color:#fff; font-size:15px; line-height:1.25; padding:0 12px 28px; border-bottom:1px solid rgba(255,255,255,.13); }
+    .brand-mark { display:grid; place-items:center; width:39px; height:39px; border-radius:12px; background:linear-gradient(135deg,#f0c264,#e89733); color:#14384e; font-size:21px; }
+    .nav-caption { text-transform:uppercase; letter-spacing:.12em; font-size:10px; font-weight:700; color:#86adbc; margin:27px 12px 9px; }
+    .side-link { width:100%; display:flex; gap:12px; align-items:center; border:0; background:transparent; color:#bed4dd; border-radius:10px; padding:11px 12px; text-align:left; font-size:13px; margin:3px 0; transition:.2s; }
+    .side-link i { width:19px; text-align:center; font-size:16px; }
+    .side-link:hover,.side-link.active { background:rgba(255,255,255,.12); color:#fff; }
+    .side-footer { position:absolute; bottom:22px; left:28px; right:28px; color:#86adbc; font-size:11px; line-height:1.5; }
+    .main { width:calc(100% - 262px); margin-left:262px; }
+    .topbar { height:76px; display:flex; align-items:center; justify-content:space-between; padding:0 4%; background:#fff; border-bottom:1px solid var(--line); }
+    .eyebrow { color:var(--muted); font-size:12px; }
+    .topbar-title { font-size:18px; font-weight:700; margin:2px 0 0; }
+    .profile { display:flex; align-items:center; gap:10px; }
+    .avatar { display:grid; place-items:center; width:36px; height:36px; border-radius:11px; background:#dff3ef; color:#13786d; font-weight:700; font-size:12px; }
+    .profile-name { font-size:12px; font-weight:700; line-height:1.25; }
+    .profile-role { color:var(--muted); font-size:10px; }
+    .content { max-width:1500px; margin:auto; padding:32px 4%; }
+    .page { display:none; animation:fade .22s ease; } .page.active { display:block; }
+    @keyframes fade { from {opacity:0; transform:translateY(4px)} to {opacity:1;transform:none} }
+    .welcome { background:linear-gradient(120deg,#e9f7f4,#f0f7fb); border:1px solid #d5ebe7; border-radius:18px; padding:25px 28px; display:flex; justify-content:space-between; align-items:center; gap:20px; }
+    .welcome h1 { font-size:23px; margin:0 0 6px; } .welcome p { margin:0; color:var(--muted); font-size:13px; }
+    .btn-primary { --bs-btn-bg:var(--teal); --bs-btn-border-color:var(--teal); --bs-btn-hover-bg:#117d72; --bs-btn-hover-border-color:#117d72; }
+    .btn-gold { background:var(--gold); color:#14384e; border:0; } .btn-gold:hover { background:#d99b2d; color:#14384e; }
+    .metric-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin:22px 0; }
+    .metric { background:#fff; border:1px solid var(--line); border-radius:14px; padding:17px; position:relative; overflow:hidden; }
+    .metric:after { content:""; width:54px; height:54px; border-radius:50%; background:#edf8f6; position:absolute; right:-16px; top:-17px; }
+    .metric-label { color:var(--muted); font-size:11px; } .metric-value { font:800 24px "Plus Jakarta Sans"; margin:7px 0 0; } .metric-icon { color:var(--teal); position:absolute; right:14px; top:14px; z-index:1; font-size:18px; }
+    .section-head { display:flex; justify-content:space-between; align-items:center; gap:10px; margin:28px 0 13px; } .section-head h2 { font-size:16px; margin:0; }
+    .card-box { background:#fff; border:1px solid var(--line); border-radius:14px; padding:19px; }
+    .table { font-size:12px; margin:0; } .table th { color:#718797; font-size:10px; text-transform:uppercase; letter-spacing:.05em; border-bottom-color:var(--line); white-space:nowrap; } .table td { padding:14px 9px; vertical-align:middle; border-color:#eef3f5; }
+    .badge-status { display:inline-flex; align-items:center; gap:5px; border-radius:30px; font-size:10px; padding:6px 9px; font-weight:700; white-space:nowrap; }
+    .st-draft { background:#eef2f4; color:#71818d; } .st-submitted { background:#eaf2ff; color:#3c6bb5; } .st-review { background:#fff3da; color:#a36c09; } .st-improve { background:#fff0e8; color:#c26027; } .st-rejected { background:#ffe8ea; color:#b33d4c; } .st-approved { background:#e7f7ef; color:#238052; } .st-issued { background:#dff5f1; color:#11786d; } .st-complete { background:#dcecf5; color:#28627d; }
+    .request-title { font-weight:700; color:var(--ink); } .request-meta { color:var(--muted); font-size:11px; margin-top:3px; }
+    .timeline { border-left:2px solid #d8e8eb; padding-left:21px; margin:16px 0 6px 7px; } .timeline-item { position:relative; padding-bottom:18px; } .timeline-item:before { content:""; position:absolute; width:10px; height:10px; background:#fff; border:3px solid var(--teal); border-radius:50%; left:-27px; top:3px; } .timeline-item.done:before { background:var(--teal); } .timeline-item small { color:var(--muted); font-size:10px; } .timeline-item strong { display:block; font-size:12px; margin:2px 0; }
+    .empty { color:var(--muted); text-align:center; padding:40px 15px; font-size:13px; } .empty i { display:block; font-size:31px; color:#b7ccd4; margin-bottom:9px; }
+    .form-label { font-size:12px; font-weight:700; } .form-control,.form-select { font-size:13px; border-color:#dce8ed; padding:10px 12px; border-radius:9px; } .form-control:focus,.form-select:focus { border-color:var(--teal); box-shadow:0 0 0 .2rem rgba(21,154,140,.12); }
+    .type-card { border:1px solid var(--line); border-radius:11px; padding:12px; cursor:pointer; height:100%; transition:.15s; } .type-card:hover,.type-card.selected { border-color:var(--teal); background:#f1fbf9; } .type-card strong { display:block; font-size:12px; } .type-card span { display:block; color:var(--muted); font-size:10px; margin-top:4px; }
+    .detail-label { color:var(--muted); font-size:10px; text-transform:uppercase; letter-spacing:.05em; } .detail-value { font-size:13px; font-weight:600; margin-top:3px; }
+    .toast-container { z-index:1080; } .login-screen { min-height:100vh; display:grid; place-items:center; background:linear-gradient(135deg,#edf8f6,#eaf1f8); padding:20px; } .login-card { max-width:430px; width:100%; background:#fff; border:1px solid var(--line); border-radius:22px; padding:35px; box-shadow:0 18px 60px rgba(18,61,90,.11); } .login-logo { width:56px; height:56px; display:grid; place-items:center; border-radius:17px; background:var(--navy); color:#f4c35e; font-size:27px; margin-bottom:17px; } .demo-account { background:#f6fafb; border:1px dashed #cddfe5; border-radius:10px; padding:11px 13px; font-size:11px; color:var(--muted); } .demo-account button { font-size:10px; }
+    .mobile-menu { display:none; } .user-scope { background:#f8fbfc; border-radius:9px; padding:10px 12px; font-size:11px; color:var(--muted); }
+    @media (max-width:900px) { .sidebar { width:220px; } .main { width:calc(100% - 220px); margin-left:220px; } .metric-grid { grid-template-columns:repeat(2,1fr); } }
+    @media (max-width:650px) { .sidebar { transform:translateX(-100%); transition:.2s; width:260px; } .sidebar.open { transform:none; } .main { width:100%; margin-left:0; } .mobile-menu { display:inline-flex; } .topbar { padding:0 18px; } .content { padding:22px 16px; } .welcome { align-items:flex-start; flex-direction:column; } .metric-grid { gap:9px; } .metric { padding:13px; } .metric-value { font-size:20px; } .profile > div:last-child { display:none; } }
+  </style>
 </head>
-<body class="bg-light">
-
-  <!-- NAVBAR / HEADER -->
-  <nav class="navbar navbar-dark bg-dark shadow-sm px-3" id="mainNavbar" style="display: none;">
-    <div class="container-fluid">
-      <span class="navbar-brand fw-bold">
-        <i class="bi bi-wallet2 me-2"></i>Keuangan <span id="roleTitleBadge" class="badge bg-primary">Role</span>
-      </span>
-      <div class="d-flex align-items-center">
-        <span class="text-white me-3 d-none d-sm-inline" id="userInfo">Halo, User</span>
-        <button class="btn btn-outline-light btn-sm" onclick="logout()">
-          <i class="bi bi-box-arrow-right me-1"></i>Logout
-        </button>
-      </div>
+<body>
+  <div id="loginView" class="login-screen">
+    <div class="login-card">
+      <div class="login-logo"><i class="bi bi-envelope-paper"></i></div>
+      <h1 class="h4 fw-bold mb-2">Persuratan Yayasan</h1>
+      <p class="text-muted small mb-4">Sunan Giri Salatiga · Prototipe layanan persuratan terpadu</p>
+      <form id="loginForm">
+        <label class="form-label">Akun demo</label>
+        <select id="loginAccount" class="form-select mb-3"></select>
+        <label class="form-label">Kata sandi</label>
+        <input id="loginPassword" class="form-control mb-3" type="password" value="demo123" required>
+        <button class="btn btn-primary w-100 py-2 fw-bold" type="submit">Masuk ke aplikasi <i class="bi bi-arrow-right ms-1"></i></button>
+        <div id="loginError" class="text-danger small text-center mt-3"></div>
+      </form>
+      <div class="demo-account mt-4"><i class="bi bi-info-circle me-1"></i> Prototipe demo: pilih akun untuk mencoba tampilan sesuai hak akses.</div>
     </div>
-  </nav>
+  </div>
 
-  <div class="container my-4" style="max-width: 900px;">
-    
-    <!-- ================= SECTION 1: HALAMAN LOGIN ================= -->
-    <div id="loginSection" class="row justify-content-center" style="margin-top: 10vh;">
-      <div class="col-md-5">
-        <div class="card shadow border-0 rounded-4">
-          <div class="card-body p-4 p-sm-5">
-            <div class="text-center mb-4">
-              <i class="bi bi-shield-lock-fill text-primary display-4"></i>
-              <h3 class="fw-bold mt-2">Login Keuangan</h3>
-              <p class="text-muted small">Silakan masuk sesuai hak akses Anda</p>
-            </div>
-            
-            <div class="mb-3">
-              <label class="form-label fw-semibold">Username</label>
-              <div class="input-group">
-                <span class="input-group-text"><i class="bi bi-person"></i></span>
-                <input type="text" id="username" class="form-control" placeholder="Contoh: admin / bendahara / konsumsi">
-              </div>
-            </div>
+  <div id="appView" class="app-shell d-none">
+    <aside id="sidebar" class="sidebar">
+      <div class="brand"><div class="brand-mark"><i class="bi bi-envelope-paper"></i></div><span>Persuratan<br>Yayasan Sunan Giri</span></div>
+      <div class="nav-caption">Menu utama</div>
+      <button class="side-link active" data-page="dashboard"><i class="bi bi-grid-1x2"></i> Ringkasan</button>
+      <button class="side-link" data-page="buat"><i class="bi bi-file-earmark-plus"></i> Ajukan surat</button>
+      <button class="side-link" data-page="pengajuan"><i class="bi bi-files"></i> Daftar pengajuan <span id="pendingNav" class="badge rounded-pill bg-warning text-dark ms-auto d-none">0</span></button>
+      <button class="side-link admin-only" data-page="template"><i class="bi bi-layout-text-window"></i> Template surat</button>
+      <button class="side-link admin-only" data-page="pengguna"><i class="bi bi-people"></i> Pengguna & lembaga</button>
+      <div class="nav-caption">Bantuan</div>
+      <button class="side-link" data-page="panduan"><i class="bi bi-question-circle"></i> Panduan alur</button>
+      <div class="side-footer">Akses Anda mengikuti peran dan lembaga.<br><span id="sidebarScope"></span></div>
+    </aside>
+    <main class="main">
+      <header class="topbar">
+        <div class="d-flex align-items-center gap-3"><button class="btn btn-light mobile-menu" id="menuBtn"><i class="bi bi-list"></i></button><div><div class="eyebrow">Yayasan Sunan Giri Salatiga</div><div id="pageTitle" class="topbar-title">Ringkasan</div></div></div>
+        <div class="profile"><div class="avatar" id="avatar">AG</div><div><div id="profileName" class="profile-name">-</div><div id="profileRole" class="profile-role">-</div></div><button class="btn btn-sm btn-light ms-2" id="logoutBtn" title="Keluar"><i class="bi bi-box-arrow-right"></i></button></div>
+      </header>
+      <div class="content">
+        <section id="page-dashboard" class="page active">
+          <div class="welcome"><div><h1 id="welcomeTitle">Selamat datang</h1><p id="welcomeText">Pantau dan kelola layanan persuratan dalam satu tempat.</p></div><button class="btn btn-primary" data-go="buat"><i class="bi bi-plus-lg me-1"></i> Ajukan surat</button></div>
+          <div id="metrics" class="metric-grid"></div>
+          <div class="section-head"><h2>Pengajuan terbaru</h2><button class="btn btn-sm btn-link text-decoration-none" data-go="pengajuan">Lihat semua <i class="bi bi-arrow-right"></i></button></div>
+          <div class="card-box"><div id="recentRequests"></div></div>
+          <div id="operatorTip" class="mt-3"></div>
+        </section>
 
-            <div class="mb-4">
-              <label class="form-label fw-semibold">Password</label>
-              <div class="input-group">
-                <span class="input-group-text"><i class="bi bi-key"></i></span>
-                <input type="password" id="password" class="form-control" placeholder="Password...">
-              </div>
-            </div>
-
-            <button class="btn btn-primary w-100 py-2 fw-bold rounded-3 shadow-sm" id="btnLogin" onclick="prosesLogin()">
-              Masuk Sistem
-            </button>
-            <div id="loginStatus" class="mt-3 text-danger text-center fw-bold small"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ================= SECTION 2: DASHBOARD ADMIN ================= -->
-    <div id="adminSection" class="role-section" style="display: none;">
-      <div class="row mb-4">
-        <div class="col-12">
-          <div class="alert alert-primary shadow-sm rounded-4 p-4 border-0">
-            <h4 class="fw-bold mb-1">Dashboard Admin</h4>
-            <p class="mb-0 text-muted small">Monitor real-time anggaran, pengeluaran lain-lain, dan persetujuan penambahan dana.</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Nav Tabs Admin -->
-      <ul class="nav nav-pills mb-3 gap-2" role="tablist">
-        <li class="nav-item"><button class="nav-link active rounded-pill px-3" data-bs-toggle="pill" data-bs-target="#adminTab1">Rekap & Saldo</button></li>
-        <li class="nav-item"><button class="nav-link rounded-pill px-3" data-bs-toggle="pill" data-bs-target="#adminTab2">Persetujuan Dana</button></li>
-        <li class="nav-item"><button class="nav-link rounded-pill px-3" data-bs-toggle="pill" data-bs-target="#adminTab3">Belanja Lain-lain</button></li>
-        <li class="nav-item"><button class="nav-link rounded-pill px-3" data-bs-toggle="pill" data-bs-target="#adminTab4">Rekap Kas & Pemasukan</button></li>
-        <li class="nav-item"><button class="nav-link rounded-pill px-3" data-bs-toggle="pill" data-bs-target="#adminTab5">Log Aktivitas</button></li>
-      </ul>
-
-      <div class="tab-content">
-        <div class="tab-pane fade show active" id="adminTab1">
-          <div class="card border-0 shadow-sm rounded-4 p-3">
-            <h5 class="fw-bold mb-3">Rekapitulasi Anggaran & Realisasi Per Divisi</h5>
-            <button class="btn btn-dark btn-sm fw-bold" onclick="cetakLaporanLPJ()">
-                <i class="bi bi-printer me-1"></i> Cetak / Unduh LPJ
-             </button>
-            <div class="table-responsive shadow-sm rounded border">
-              <table class="table table-hover align-middle mb-0 text-nowrap">
-                <thead class="table-light">
-                  <tr>
-                    <th>Divisi</th>
-                    <th>Pagu Anggaran</th>
-                    <th>Dana Masuk (Transfer)</th>
-                    <th>Realisasi Belanja</th>
-                    <th>Sisa Saldo</th>
-                  </tr>
-                </thead>
-                <tbody id="adminTabelRekap">
-                  <tr><td colspan="5" class="text-center text-muted">Memuat data rekap...</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-        <div class="tab-pane fade" id="adminTab2">
-          <div class="card border-0 shadow-sm rounded-4 p-4">
-            <h5 class="fw-bold mb-3">Daftar Pengajuan Penambahan Anggaran dari Divisi</h5>
-            <div id="adminListPengajuan" class="text-muted">Belum ada pengajuan.</div>
-          </div>
-        </div>
-        <div class="tab-pane fade" id="adminTab3">
-          <div class="card border-0 shadow-sm rounded-4 p-4">
-            <h5 class="fw-bold mb-3">Input Pengeluaran Lain-Lain (Operasional Umum)</h5>
-            <p class="text-muted small">Pengeluaran di luar pagu divisi tertentu.</p>
-          </div>
-        </div>
-        <div class="tab-pane fade" id="adminTab4">
-          <div class="card border-0 shadow-sm rounded-4 p-4">
-            <h5 class="fw-bold mb-3">Rekapitulasi Pemasukan Kas & Saldo Bendahara (Pusat)</h5>
-            <div id="adminRingkasanKas" class="mb-4">Memuat ringkasan kas...</div>
-            <hr>
-            <h6 class="fw-bold mb-2">Rincian Pengelompokan Pemasukan</h6>
-            <div id="adminTabelPemasukan" class="table-responsive">
-              <p class="text-muted small">Memuat rincian...</p>
-            </div>
-          </div>
-        </div>
-        <div class="tab-pane fade" id="adminTab5">
-          <div class="card border-0 shadow-sm rounded-4 p-4">
-            <h5 class="fw-bold mb-3">Riwayat Aktivitas Sistem (Audit Trail)</h5>
-            <div id="adminLogList" class="text-muted small">Memuat log aktivitas...</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ================= SECTION 3: DASHBOARD BENDAHARA ================= -->
-    <div id="bendaharaSection" class="role-section" style="display: none;">
-      <div class="row mb-4">
-        <div class="col-12">
-          <div class="alert alert-success shadow-sm rounded-4 p-4 border-0">
-            <h4 class="fw-bold mb-1">Dashboard Bendahara Utama</h4>
-            <p class="mb-0 text-muted small">Kelola kas masuk (iuran/donatur) dan distribusikan dana ke divisi-divisi.</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Nav Tabs Bendahara -->
-      <ul class="nav nav-pills mb-3 gap-2" role="tablist">
-        <li class="nav-item"><button class="nav-link active rounded-pill px-3" data-bs-toggle="pill" data-bs-target="#benTab1">Input Pemasukan</button></li>
-        <li class="nav-item"><button class="nav-link rounded-pill px-3" data-bs-toggle="pill" data-bs-target="#benTab2">Transfer ke Divisi</button></li>
-        <li class="nav-item"><button class="nav-link rounded-pill px-3" data-bs-toggle="pill" data-bs-target="#benTab3">Rekap & Saldo Kas</button></li>
-      </ul>
-
-      <div class="tab-content">
-        <div class="tab-pane fade show active" id="benTab1">
-          <div class="card border-0 shadow-sm rounded-4 p-4">
-            <h5 class="fw-bold mb-3">Catat Kas Masuk (Iuran Santri / Donatur)</h5>
-            <form id="formPemasukan">
-              <div class="mb-3">
-                <label class="form-label">Sumber Pemasukan</label>
-                <input type="text" id="incSource" class="form-control" placeholder="Contoh: Iuran Santri TPQ / Donatur H. Ali" required>
-              </div>
-              <div class="mb-3">
-                <label class="form-label">Nominal (Rp)</label>
-                <input type="number" id="incAmount" class="form-control" placeholder="0" required>
-              </div>
-              <div class="mb-3">
-                <label class="form-label">Keterangan Tambahan</label>
-                <textarea id="incDesc" class="form-control" rows="2" placeholder="Opsional..."></textarea>
-              </div>
-              <button type="submit" class="btn btn-success w-100 fw-bold">Simpan Pemasukan</button>
+        <section id="page-buat" class="page">
+          <div class="section-head mt-0"><div><h2>Ajukan surat baru</h2><div class="eyebrow mt-1">Lengkapi data berikut agar surat dapat diproses.</div></div></div>
+          <div class="card-box">
+            <form id="requestForm">
+              <div class="row g-3"><div class="col-md-7"><label class="form-label">Jenis surat <span class="text-danger">*</span></label><div id="typeOptions" class="row g-2"></div><input type="hidden" id="selectedType" required></div><div class="col-md-5"><div class="user-scope mb-3"><i class="bi bi-person-check me-1"></i> Pengajuan atas nama <strong id="applicantName"></strong><br><span id="applicantScope"></span></div><label class="form-label">Keperluan / ditujukan kepada <span class="text-danger">*</span></label><input id="purpose" class="form-control" placeholder="Contoh: Persyaratan beasiswa" required></div></div>
+              <hr class="my-4"><div class="row g-3"><div class="col-md-6"><label class="form-label">Nama lengkap <span class="text-danger">*</span></label><input id="fullName" class="form-control" required></div><div class="col-md-3"><label class="form-label">NIK / NIS <span class="text-danger">*</span></label><input id="identity" class="form-control" required></div><div class="col-md-3"><label class="form-label">Nomor telepon</label><input id="phone" class="form-control" placeholder="08..."></div><div class="col-12"><label class="form-label">Keterangan tambahan</label><textarea id="notes" class="form-control" rows="3" placeholder="Tambahkan informasi yang perlu dicantumkan dalam surat"></textarea></div><div class="col-12"><label class="form-label">Lampiran pendukung</label><input id="attachment" class="form-control" type="file"><div class="form-text">Prototipe hanya menyimpan nama file. Maksimal 10 MB per lampiran.</div></div></div>
+              <div class="d-flex justify-content-end gap-2 mt-4"><button type="button" class="btn btn-light" id="saveDraftBtn">Simpan sebagai draft</button><button class="btn btn-primary px-4" type="submit">Ajukan sekarang <i class="bi bi-send ms-1"></i></button></div>
             </form>
           </div>
-        </div>
-        <div class="tab-pane fade" id="benTab2">
-          <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
-            <h5 class="fw-bold mb-3">Transfer / Alokasi Dana ke Divisi</h5>
-            <form id="formTransfer">
-              <div class="mb-3">
-                <label class="form-label">Pilih Divisi Tujuan</label>
-                <select id="trfDivision" class="form-select" required>
-                  <option value="">Pilih Divisi...</option>
-                </select>
-              </div>
-              <div class="mb-3">
-                <label class="form-label">Nominal Transfer (Rp)</label>
-                <input type="number" id="trfAmount" class="form-control" placeholder="0" required>
-              </div>
-              <div class="mb-3">
-                <label class="form-label">Catatan Transfer</label>
-                <textarea id="trfDesc" class="form-control" rows="2" placeholder="Contoh: Tahap 1 pencairan anggaran..."></textarea>
-              </div>
-              <button type="submit" class="btn btn-success w-100 fw-bold">Kirim Dana ke Divisi</button>
-            </form>
-          </div>
-          <!-- Bagian Rekap Transfer & Kekurangan Pagu -->
-          <div class="card border-0 shadow-sm rounded-4 p-4">
-            <h5 class="fw-bold mb-3">Status Pencairan & Kekurangan Pagu Per Divisi</h5>
-            <div id="benTabelKekuranganPagu" class="table-responsive mb-4">
-              <p class="text-muted small">Memuat data kekurangan pagu...</p>
-            </div>
+        </section>
 
-            <h5 class="fw-bold mb-3">Riwayat Transfer ke Divisi</h5>
-            <div id="benRiwayatTransfer" class="table-responsive">
-              <p class="text-muted small">Memuat riwayat transfer...</p>
-            </div>
-          </div>
-        </div>
-        <div class="tab-pane fade" id="benTab3">
-          <div class="card border-0 shadow-sm rounded-4 p-4">
-            <h5 class="fw-bold mb-3">Rekapitulasi Kas & Riwayat Transfer</h5>
-            <div id="benRingkasanKas" class="mb-4">Memuat ringkasan kas...</div>            
-            <hr>
-            <h6 class="fw-bold mb-2">Rincian Pengelompokan Pemasukan</h6>
-            <div id="benTabelPemasukan" class="table-responsive">
-              <p class="text-muted small">Memuat rincian...</p>
-            </div>
-          </div>
-        </div>
+        <section id="page-pengajuan" class="page">
+          <div class="section-head mt-0"><div><h2 id="requestPageTitle">Daftar pengajuan</h2><div class="eyebrow mt-1" id="requestPageSub">Riwayat pengajuan surat Anda.</div></div><button class="btn btn-primary btn-sm" data-go="buat"><i class="bi bi-plus-lg me-1"></i> Pengajuan baru</button></div>
+          <div class="card-box mb-3"><div class="row g-2"><div class="col-md-5"><input id="searchRequests" class="form-control" placeholder="Cari nomor, nama, atau jenis surat..."></div><div class="col-md-3"><select id="statusFilter" class="form-select"><option value="">Semua status</option><option>Diajukan</option><option>Diperiksa Operator</option><option>Menunggu Persetujuan</option><option>Perlu Perbaikan</option><option>Ditolak</option><option>Disetujui</option><option>Diterbitkan</option><option>Selesai</option><option>Draft</option></select></div><div class="col-md-4 text-md-end"><span id="scopeFilter" class="eyebrow"></span></div></div></div>
+          <div class="card-box"><div class="table-responsive"><table class="table"><thead><tr><th>Pengajuan</th><th>Pemohon</th><th>Lembaga</th><th>Diajukan</th><th>Status</th><th></th></tr></thead><tbody id="requestTable"></tbody></table></div></div>
+        </section>
+
+        <section id="page-template" class="page"><div class="section-head mt-0"><div><h2>Template surat</h2><div class="eyebrow mt-1">Kelola format surat yang digunakan oleh operator lembaga.</div></div><button class="btn btn-primary btn-sm" id="addTemplateBtn"><i class="bi bi-plus-lg me-1"></i> Tambah template</button></div><div class="card-box"><div class="table-responsive"><table class="table"><thead><tr><th>Nama template</th><th>Kategori</th><th>Lembaga</th><th>Terakhir diperbarui</th><th></th></tr></thead><tbody id="templateTable"></tbody></table></div></div></section>
+        <section id="page-pengguna" class="page"><div class="section-head mt-0"><div><h2>Pengguna & lembaga</h2><div class="eyebrow mt-1">Ringkasan akses pengguna pada sistem persuratan.</div></div></div><div class="row g-3" id="userCards"></div></section>
+        <section id="page-panduan" class="page"><div class="section-head mt-0"><div><h2>Panduan alur persuratan</h2><div class="eyebrow mt-1">Alur kerja berdasarkan peran masing-masing.</div></div></div><div class="row g-3" id="guideCards"></div></section>
       </div>
-    </div>
+    </main>
+  </div>
 
-    <!-- ================= SECTION 4: DASHBOARD DIVISI ================= -->
-    <div id="divisiSection" class="role-section" style="display: none;">
-      <div class="row mb-4">
-        <div class="col-12">
-          <div class="alert alert-warning shadow-sm rounded-4 p-4 border-0">
-            <h4 class="fw-bold mb-1">Dashboard Divisi: <span id="namaDivisiBanner" class="text-dark"></span></h4>
-            <p class="mb-0 text-muted small">Input realisasi belanja nota, pantau sisa saldo divisi, dan ajukan tambahan anggaran.</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Nav Tabs Divisi -->
-      <ul class="nav nav-pills mb-3 gap-2" role="tablist">
-        <li class="nav-item"><button class="nav-link active rounded-pill px-3" data-bs-toggle="pill" data-bs-target="#divTab1">Input Realisasi Nota</button></li>
-        <li class="nav-item"><button class="nav-link rounded-pill px-3" data-bs-toggle="pill" data-bs-target="#divTab2">Riwayat & Saldo</button></li>
-        <li class="nav-item"><button class="nav-link rounded-pill px-3" data-bs-toggle="pill" data-bs-target="#divTab3">Pengajuan Tambahan</button></li>
-      </ul>
-
-      <div class="tab-content">
-        <div class="tab-pane fade show active" id="divTab1">
-          <div class="card border-0 shadow-sm rounded-4 p-4">
-            <h5 class="fw-bold mb-3">Form Input Pengeluaran & Nota Belanja</h5>
-            <form id="formRealisasiDivisi">
-              <div class="mb-3">
-                <label class="form-label">Nominal Pengeluaran (Rp)</label>
-                <input type="number" id="divAmount" class="form-control" placeholder="0" required>
-              </div>
-              <div class="mb-3">
-                <label class="form-label">Keterangan / Uraian Belanja</label>
-                <textarea id="divDesc" class="form-control" rows="2" placeholder="Contoh: Beli konsumsi rapat akbar..." required></textarea>
-              </div>
-              <div class="mb-3">
-                <label class="form-label">Foto Bukti Nota / Transaksi</label>
-                <input type="file" id="divFile" class="form-control" accept="image/*" required>
-                <div class="form-text">Format gambar (JPG/PNG).</div>
-              </div>
-              <button type="submit" class="btn btn-warning w-100 fw-bold text-dark">Kirim Laporan Belanja</button>
-            </form>
-          </div>
-        </div>
-        <div class="tab-pane fade" id="divTab2">
-          <div class="card border-0 shadow-sm rounded-4 p-4">
-            <h5 class="fw-bold mb-3">Saldo & Rekapitulasi Divisi Anda</h5>
-            <div id="divSaldoContent" class="mb-3">Memuat saldo...</div>
-            <hr>
-            <h6 class="fw-bold mb-2">Riwayat Belanja Divisi</h6>
-            <div id="divRiwayatList" class="text-muted small">Belum ada data belanja.</div>
-          </div>
-        </div>
-        <div class="tab-pane fade" id="divTab3">
-          <div class="card border-0 shadow-sm rounded-4 p-4">
-            <h5 class="fw-bold mb-3">Pengajuan Tambahan Anggaran ke Admin</h5>
-            <form id="formPengajuan">
-              <div class="mb-3">
-                <label class="form-label">Nominal Tambahan yang Diminta (Rp)</label>
-                <input type="number" id="reqAmount" class="form-control" placeholder="0" required>
-              </div>
-              <div class="mb-3">
-                <label class="form-label">Alasan / Kebutuhan Mendesak</label>
-                <textarea id="reqReason" class="form-control" rows="3" placeholder="Jelaskan kenapa membutuhkan tambahan anggaran..." required></textarea>
-              </div>
-              <button type="submit" class="btn btn-danger w-100 fw-bold">Kirim Pengajuan</button>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div> <!-- Tutup divisionSection dengan benar -->
-
-  </div> <!-- Tutup container utama -->
-
-  <!-- Bootstrap JS Bundle -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
+  <div class="modal fade" id="detailModal" tabindex="-1"><div class="modal-dialog modal-lg modal-dialog-scrollable"><div class="modal-content border-0"><div class="modal-header"><div><div class="eyebrow">Detail pengajuan</div><h5 id="detailTitle" class="modal-title mt-1">-</h5></div><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body" id="detailBody"></div><div class="modal-footer" id="detailActions"></div></div></div></div>
+  <div class="modal fade" id="templateModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content border-0"><form id="templateForm"><div class="modal-header"><h5 class="modal-title">Tambah template surat</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><label class="form-label">Nama template</label><input id="templateName" class="form-control mb-3" required><label class="form-label">Kategori</label><select id="templateCategory" class="form-select mb-3"><option>Santri</option><option>Pegawai / Guru</option><option>Administrasi umum</option></select><label class="form-label">Lembaga yang memakai</label><select id="templateInstitution" class="form-select"><option>Semua lembaga</option><option>Pondok Pesantren Sunan Giri</option><option>Semua lembaga pendidikan</option></select></div><div class="modal-footer"><button class="btn btn-primary" type="submit">Simpan template</button></div></form></div></div></div>
+  <div id="toastArea" class="toast-container position-fixed bottom-0 end-0 p-3"></div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    // 1. KONEKSI SUPABASE
-    const SUPABASE_URL = 'https://nffrxxkydlsvtbliqalv.supabase.co'; 
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5mZnJ4eGt5ZGxzdnRibGlxYWx2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg4MzI1NTcsImV4cCI6MjEwNDQwODU1N30.s5YBFQ7W1KRKba3MMRFl-q42nRRApak_3QLd7S4B85A'; 
-    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    // 2. CEK SESI SAAT HALAMAN DIBUKA
-    window.onload = function() {
-      const savedUser = sessionStorage.getItem('userData');
-      if(savedUser) {
-        tampilkanHalaman(JSON.parse(savedUser));
-      }
+    const institutions = ["Yayasan Sunan Giri Salatiga","SMP Islam Sunan Giri","MA Plus Sunan Giri","PKBM Sunan Giri","Pondok Pesantren Sunan Giri","Madrasah Diniyah Sunan Giri","TPQ Sunan Giri"];
+    const users = [
+      {id:"u1",name:"Admin Yayasan",username:"admin",role:"admin",institution:"Yayasan Sunan Giri Salatiga",type:"Admin yayasan"},
+      {id:"u2",name:"Operator SMP",username:"operator.smp",role:"operator",institution:"SMP Islam Sunan Giri",type:"Operator lembaga"},
+      {id:"u3",name:"Kepala Pondok",username:"pimpinan.pondok",role:"leader",institution:"Pondok Pesantren Sunan Giri",type:"Pimpinan lembaga"},
+      {id:"u4",name:"Ahmad Fauzan",username:"guru.ahmad",role:"teacher",institution:"MA Plus Sunan Giri",type:"Pegawai / guru"},
+      {id:"u5",name:"Muhammad Rizky",username:"santri.rizky",role:"student",institution:"Pondok Pesantren Sunan Giri",type:"Santri"}
+    ];
+    const types = {
+      student:[["santri-aktif","Keterangan santri aktif","Untuk sekolah, kampus, beasiswa"],["izin-pulang","Izin pulang / keluar pondok","Permohonan izin meninggalkan pondok"],["izin-kegiatan","Izin tidak mengikuti kegiatan","Keterangan izin kegiatan pondok"],["rekomendasi-santri","Rekomendasi santri","Rekomendasi pendidikan atau kegiatan"],["domisili-pondok","Keterangan tinggal di pondok","Keterangan domisili / mukim"],["pengantar-santri","Surat pengantar santri","Pengantar kebutuhan administrasi"]],
+      teacher:[["aktif-mengajar","Keterangan aktif mengajar / bekerja","Keterangan status kepegawaian"],["surat-tugas","Surat tugas","Penugasan kegiatan atau perjalanan dinas"],["izin-pegawai","Surat izin","Izin tidak masuk atau meninggalkan tugas"],["rekomendasi-guru","Surat rekomendasi","Rekomendasi pendidikan atau pekerjaan"],["pengantar-guru","Surat pengantar","Pengantar urusan administrasi"],["pengalaman-kerja","Surat pengalaman kerja","Keterangan pengalaman bekerja"]],
+      operator:[["aktif-mengajar","Keterangan aktif bekerja","Keterangan status kepegawaian"],["surat-tugas","Surat tugas","Penugasan kegiatan atau perjalanan dinas"],["administrasi","Administrasi lainnya","Surat administratif lembaga"]]
     };
-
-    // 3. FUNGSI LOGIN
-    async function prosesLogin() {
-      const user = document.getElementById('username').value.trim();
-      const pass = document.getElementById('password').value.trim();
-      const btn = document.getElementById('btnLogin');
-      const status = document.getElementById('loginStatus');
-      
-      if(!user || !pass) {
-        status.innerText = "Username dan password wajib diisi!";
-        return;
-      }
-
-      btn.innerText = "Memeriksa..."; btn.disabled = true; status.innerText = "";
-
-      try {
-        const { data, error } = await client
-          .from('app_users')
-          .select('id, username, role, division_id, divisions(name)')
-          .eq('username', user)
-          .eq('password', pass);
-
-        if (error || !data || data.length === 0) {
-          throw new Error("Username atau password salah!");
-        }
-
-        const u = data[0];
-        const userData = {
-          id: u.id,
-          username: u.username,
-          role: u.role,
-          division_id: u.division_id,
-          division_name: u.divisions ? u.divisions.name : null
-        };
-        
-        sessionStorage.setItem('userData', JSON.stringify(userData));
-        tampilkanHalaman(userData);
-
-      } catch (err) {
-        status.innerText = err.message;
-      } finally {
-        btn.innerText = "Masuk Sistem"; btn.disabled = false;
-      }
-    }
-
-    // 4. ROUTING TAMPILAN BERDASARKAN ROLE
-    function tampilkanHalaman(u) {
-      document.getElementById('loginSection').style.display = 'none';
-      document.getElementById('mainNavbar').style.display = 'block';
-      document.getElementById('userInfo').innerText = u.username.toUpperCase() + " (" + u.role.toUpperCase() + ")";
-
-      if (u.role === 'admin') {
-        document.getElementById('adminSection').style.display = 'block';
-        document.getElementById('roleTitleBadge').innerText = "ADMIN";
-        muatDataAdmin();
-      } else if (u.role === 'bendahara') {
-        document.getElementById('bendaharaSection').style.display = 'block';
-        document.getElementById('roleTitleBadge').innerText = "BENDAHARA";
-        muatDropdownDivisi();
-        muatRekapBendahara();
-        muatDataTransferBendahara();
-      } else if (u.role === 'divisi') {
-        document.getElementById('divisiSection').style.display = 'block';
-        document.getElementById('roleTitleBadge').innerText = u.division_name ? u.division_name.toUpperCase() : "DIVISI";
-        document.getElementById('namaDivisiBanner').innerText = u.division_name || "Divisi";
-        muatDashboardDivisi(u);
-      }
-    }
-
-    // 5. LOGOUT
-    function logout() {
-      sessionStorage.removeItem('userData');
-      location.reload();
-    }
-
-    // Dropdown divisi untuk bendahara
-    async function muatDropdownDivisi() {
-      const { data } = await client.from('divisions').select('*');
-      let select = document.getElementById('trfDivision');
-      select.innerHTML = '<option value="">Pilih Divisi...</option>';
-      if(data) {
-        data.forEach(d => {
-          select.innerHTML += `<option value="${d.id}">${d.name}</option>`;
-        });
-      }
-    }
-
-    function muatDataAdmin() {
-      console.log("Memuat data admin...");
-    }
-
-    // ==========================================
-    // FUNGSI BENDAHARA: INPUT PEMASUKAN & TRANSFER
-    // ==========================================
-    document.getElementById('formPemasukan').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      const source = document.getElementById('incSource').value.trim();
-      const amount = document.getElementById('incAmount').value.trim();
-      const description = document.getElementById('incDesc').value.trim();
-
-      const { error } = await client
-        .from('incomes')
-        .insert([{ source: source, amount: parseFloat(amount), description: description }]);
-
-      if (error) {
-        alert("Gagal menyimpan pemasukan: " + error.message);
-      } else {
-        alert("Pemasukan berhasil dicatat!");
-        document.getElementById('formPemasukan').reset();
-        muatRekapBendahara();
-        muatDataTransferBendahara();
-      }
-    });
-
-    document.getElementById('formTransfer').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      const division_id = document.getElementById('trfDivision').value;
-      const amount = document.getElementById('trfAmount').value.trim();
-      const description = document.getElementById('trfDesc').value.trim();
-
-      if (!division_id) {
-        alert("Pilih divisi tujuan terlebih dahulu!");
-        return;
-      }
-
-      const { error } = await client
-        .from('budget_transfers')
-        .insert([{ division_id: parseInt(division_id), amount: parseFloat(amount), description: description }]);
-
-      if (error) {
-        alert("Gagal melakukan transfer: " + error.message);
-      } else {
-        alert("Dana berhasil ditransfer ke divisi!");
-        document.getElementById('formTransfer').reset();
-        muatDataTransferBendahara();
-      }
-    });
-
-    // ==========================================
-    // FUNGSI DIVISI: UPLOAD NOTA & REALISASI DENGAN VALIDASI SALDO
-    // ==========================================
-    document.getElementById('formRealisasiDivisi').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      
-      const currentUser = JSON.parse(sessionStorage.getItem('userData'));
-      const amountInput = parseFloat(document.getElementById('divAmount').value.trim());
-      const description = document.getElementById('divDesc').value.trim();
-      const fileInput = document.getElementById('divFile');
-      const submitBtn = e.target.querySelector('button[type="submit"]');
-
-      if (fileInput.files.length === 0) {
-        alert("Harap lampirkan foto bukti nota!");
-        return;
-      }
-
-      // 1. VALIDASI SALDO TERLEBIH DAHULU SEBELUM UPLOAD
-      const { data: transfers } = await client.from('budget_transfers').select('amount').eq('division_id', currentUser.division_id);
-      let totalTransfer = 0;
-      if (transfers) transfers.forEach(t => totalTransfer += Number(t.amount));
-
-      const { data: expenses } = await client.from('expenses').select('amount').eq('division_id', currentUser.division_id);
-      let totalBelanja = 0;
-      if (expenses) expenses.forEach(ex => totalBelanja += Number(ex.amount));
-
-      let sisaSaldo = totalTransfer - totalBelanja;
-
-      if (amountInput > sisaSaldo) {
-        alert(`Gagal! Nominal belanja (Rp ${amountInput.toLocaleString('id-ID')}) melebihi sisa saldo dana yang tersedia (Rp ${sisaSaldo.toLocaleString('id-ID')}). Silakan ajukan tambahan anggaran ke Admin.`);
-        return;
-      }
-
-      const file = fileInput.files[0];
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${currentUser.division_name}_${Date.now()}.${fileExt}`;
-      const filePath = `${fileName}`;
-
-      submitBtn.innerText = "Mengunggah Nota...";
-      submitBtn.disabled = true;
-
-      try {
-        const { error: uploadError } = await client.storage
-          .from('NOTA_TRANSAKSI')
-          .upload(filePath, file);
-
-        if (uploadError) throw new Error("Gagal upload gambar: " + uploadError.message);
-
-        const { data: urlData } = client.storage
-          .from('NOTA_TRANSAKSI')
-          .getPublicUrl(filePath);
-        
-        const publicUrl = urlData.publicUrl;
-
-        const { error: dbError } = await client
-          .from('expenses')
-          .insert([{
-            division_id: currentUser.division_id,
-            input_by_role: 'divisi',
-            amount: amountInput,
-            description: description,
-            receipt_url: publicUrl
-          }]);
-
-        if (dbError) throw new Error("Gagal menyimpan data ke database: " + dbError.message);
-
-        await catatLogAktivitas(`Divisi ${currentUser.division_name} menginput realisasi belanja sebesar Rp ${amountInput.toLocaleString('id-ID')}`);
-
-        alert("Laporan belanja dan nota berhasil dikirim!");
-        document.getElementById('formRealisasiDivisi').reset();
-        muatDashboardDivisi(currentUser);
-
-      } catch (err) {
-        alert(err.message);
-      } finally {
-        submitBtn.innerText = "Kirim Laporan Belanja";
-        submitBtn.disabled = false;
-      }
-    });
-
-    // ==========================================
-    // FUNGSI DIVISI: SALDO, RIWAYAT & PENGAJUAN
-    // ==========================================
-    async function muatDashboardDivisi(u) {
-      await muatSaldoDanRiwayatDivisi(u.division_id);
-      await muatDaftarPengajuanDivisi(u.division_id);
-    }
-
-    async function muatSaldoDanRiwayatDivisi(divisionId) {
-      const { data: transfers } = await client
-        .from('budget_transfers')
-        .select('amount, description, created_at')
-        .eq('division_id', divisionId);
-
-      let totalTransfer = 0;
-      if (transfers) {
-        transfers.forEach(t => totalTransfer += Number(t.amount));
-      }
-
-      const { data: expenses } = await client
-        .from('expenses')
-        .select('amount, description, receipt_url, created_at')
-        .eq('division_id', divisionId)
-        .order('created_at', { ascending: false });
-
-      let totalBelanja = 0;
-      let htmlRiwayat = "";
-      
-      if (expenses && expenses.length > 0) {
-        expenses.forEach(ex => {
-          totalBelanja += Number(ex.amount);
-          htmlRiwayat += `
-            <div class="p-2 mb-2 border rounded bg-white shadow-sm">
-              <div class="d-flex justify-content-between">
-                <strong>Rp ${Number(ex.amount).toLocaleString('id-ID')}</strong>
-                <small class="text-muted">${new Date(ex.created_at).toLocaleDateString('id-ID')}</small>
-              </div>
-              <p class="mb-1 small">${ex.description}</p>
-              <a href="${ex.receipt_url}" target="_blank" class="text-decoration-none small text-primary">
-                <i class="bi bi-file-earmark-image"></i> Lihat Nota
-              </a>
-            </div>`;
-        });
-      } else {
-        htmlRiwayat = "<span class='text-muted small'>Belum ada riwayat belanja.</span>";
-      }
-
-      let sisaSaldo = totalTransfer - totalBelanja;
-
-      document.getElementById('divSaldoContent').innerHTML = `
-        <div class="row text-center">
-          <div class="col-6 p-2 bg-light rounded">
-            <small class="text-muted">Total Diterima</small>
-            <h5 class="fw-bold text-success mb-0">Rp ${totalTransfer.toLocaleString('id-ID')}</h5>
-          </div>
-          <div class="col-6 p-2 bg-light rounded">
-            <small class="text-muted">Sisa Saldo</small>
-            <h5 class="fw-bold text-primary mb-0">Rp ${sisaSaldo.toLocaleString('id-ID')}</h5>
-          </div>
-        </div>`;
-      
-      document.getElementById('divRiwayatList').innerHTML = htmlRiwayat;
-    }
-
-    document.getElementById('formPengajuan').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      const currentUser = JSON.parse(sessionStorage.getItem('userData'));
-      const amount = document.getElementById('reqAmount').value.trim();
-      const reason = document.getElementById('reqReason').value.trim();
-
-      const { error } = await client
-        .from('budget_requests')
-        .insert([{
-          division_id: currentUser.division_id,
-          amount: parseFloat(amount),
-          reason: reason,
-          status: 'pending'
-        }]);
-
-      if (error) {
-        alert("Gagal mengirim pengajuan: " + error.message);
-      } else {
-        alert("Pengajuan tambahan anggaran berhasil dikirim ke Admin!");
-        document.getElementById('formPengajuan').reset();
-        muatDaftarPengajuanDivisi(currentUser.division_id);
-      }
-    });
-
-    async function muatDaftarPengajuanDivisi(divisionId) {
-      const { data, error } = await client
-        .from('budget_requests')
-        .select('*')
-        .eq('division_id', divisionId)
-        .order('created_at', { ascending: false });
-
-      let container = document.getElementById('divStatusPengajuanList');
-      if (!container) {
-        const tab3 = document.getElementById('divTab3');
-        container = document.createElement('div');
-        container.id = 'divStatusPengajuanList';
-        container.className = 'mt-4 pt-3 border-top';
-        tab3.appendChild(container);
-      }
-
-      if (!data || data.length === 0) {
-        container.innerHTML = `<h6 class="fw-bold mb-2">Status Pengajuan Anda</h6><p class="text-muted small">Belum ada riwayat pengajuan.</p>`;
-        return;
-      }
-
-      let html = `<h6 class="fw-bold mb-2">Status Pengajuan Anda</h6>`;
-      data.forEach(req => {
-        let badgeColor = 'bg-warning text-dark';
-        if (req.status === 'approved') badgeColor = 'bg-success text-white';
-        if (req.status === 'rejected') badgeColor = 'bg-danger text-white';
-
-        html += `
-          <div class="p-2 mb-2 border rounded bg-white shadow-sm">
-            <div class="d-flex justify-content-between align-items-center">
-              <strong>Rp ${Number(req.amount).toLocaleString('id-ID')}</strong>
-              <span class="badge ${badgeColor}">${req.status.toUpperCase()}</span>
-            </div>
-            <p class="mb-1 small text-muted">${req.reason}</p>
-            <small class="text-secondary" style="font-size: 11px;">Diajukan pada: ${new Date(req.created_at).toLocaleDateString('id-ID')}</small>
-          </div>`;
-      });
-
-      container.innerHTML = html;
-    }
-
-    // ==========================================
-    // FUNGSI ADMIN & LAIN-LAIN
-    // ==========================================
-    async function muatDataAdmin() {
-      await muatRekapSemuaDivisi();
-      await muatDaftarPengajuanAdmin();
-      inisialisasiFormLainLain();
-      await muatRekapKasAdmin();
-      await muatLogAktivitasAdmin();
-    }
-
-    async function muatRekapKasAdmin() {
-      const { data: incomes } = await client.from('incomes').select('*').order('created_at', { ascending: false });
-      const { data: transfers } = await client.from('budget_transfers').select('amount');
-
-      let totalPemasukan = 0;
-      let totalKeluarTransfer = 0;
-      let kelompokSumber = {};
-
-      if (incomes) {
-        incomes.forEach(inc => {
-          let nominal = Number(inc.amount);
-          totalPemasukan += nominal;
-          let sumber = inc.source ? inc.source.trim() : 'Lain-lain';
-          if (!kelompokSumber[sumber]) {
-            kelompokSumber[sumber] = { total: 0, count: 0 };
-          }
-          kelompokSumber[sumber].total += nominal;
-          kelompokSumber[sumber].count += 1;
-        });
-      }
-
-      if (transfers) {
-        transfers.forEach(t => totalKeluarTransfer += Number(t.amount));
-      }
-
-      let sisaKasPusat = totalPemasukan - totalKeluarTransfer;
-
-      document.getElementById('adminRingkasanKas').innerHTML = `
-        <div class="row text-center g-2">
-          <div class="col-md-4 p-3 bg-light rounded shadow-sm">
-            <small class="text-muted">Total Pemasukan Kas</small>
-            <h4 class="fw-bold text-success mb-0">Rp ${totalPemasukan.toLocaleString('id-ID')}</h4>
-          </div>
-          <div class="col-md-4 p-3 bg-light rounded shadow-sm">
-            <small class="text-muted">Total Keluar (Transfer)</small>
-            <h4 class="fw-bold text-danger mb-0">Rp ${totalKeluarTransfer.toLocaleString('id-ID')}</h4>
-          </div>
-          <div class="col-md-4 p-3 bg-light rounded shadow-sm">
-            <small class="text-muted">Sisa Kas di Bendahara</small>
-            <h4 class="fw-bold text-primary mb-0">Rp ${sisaKasPusat.toLocaleString('id-ID')}</h4>
-          </div>
-        </div>`;
-
-      let htmlTabel = `
-        <table class="table table-bordered table-sm align-middle">
-          <thead class="table-light">
-            <tr>
-              <th>Kelompok / Sumber Pemasukan</th>
-              <th class="text-center">Jumlah Transaksi</th>
-              <th>Total Nominal</th>
-            </tr>
-          </thead>
-          <tbody>`;
-
-      if (Object.keys(kelompokSumber).length > 0) {
-        for (let [sumber, info] of Object.entries(kelompokSumber)) {
-          htmlTabel += `
-            <tr>
-              <td class="fw-semibold">${sumber}</td>
-              <td class="text-center"><span class="badge bg-secondary">${info.count}x</span></td>
-              <td class="fw-bold text-success">Rp ${info.total.toLocaleString('id-ID')}</td>
-            </tr>`;
-        }
-      } else {
-        htmlTabel += `<tr><td colspan="3" class="text-center text-muted">Belum ada data pemasukan.</td></tr>`;
-      }
-
-      htmlTabel += `</tbody></table>`;
-      document.getElementById('adminTabelPemasukan').innerHTML = htmlTabel;
-    }
-
-    async function muatRekapSemuaDivisi() {
-      const tbody = document.getElementById('adminTabelRekap');
-      tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">Menghitung rekapitulasi data...</td></tr>`;
-
-      const { data: divisions } = await client.from('divisions').select('*');
-      const { data: transfers } = await client.from('budget_transfers').select('division_id, amount');
-      const { data: expenses } = await client.from('expenses').select('division_id, amount');
-      const { data: requests } = await client.from('budget_requests').select('division_id, amount').eq('status', 'approved');
-
-      if (!divisions) {
-        tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">Gagal memuat data divisi.</td></tr>`;
-        return;
-      }
-
-      let html = '';
-      let sumPagu = 0, sumTransfer = 0, sumBelanja = 0, sumSaldo = 0;
-
-      divisions.forEach(d => {
-        let paguDasar = Number(d.budget_limit || 0);
-        let tambahanDisetujui = 0;
-        if (requests) {
-          requests.filter(r => r.division_id === d.id).forEach(r => tambahanDisetujui += Number(r.amount));
-        }
-
-        let totalPaguAktif = paguDasar + tambahanDisetujui;
-
-        let totalTransfer = 0;
-        if (transfers) {
-          transfers.filter(t => t.division_id === d.id).forEach(t => totalTransfer += Number(t.amount));
-        }
-
-        let totalBelanja = 0;
-        if (expenses) {
-          expenses.filter(e => e.division_id === d.id).forEach(e => totalBelanja += Number(e.amount));
-        }
-
-        let sisaSaldo = totalTransfer - totalBelanja;
-
-        sumPagu += totalPaguAktif;
-        sumTransfer += totalTransfer;
-        sumBelanja += totalBelanja;
-        sumSaldo += sisaSaldo;
-
-        html += `
-          <tr>
-            <td class="fw-semibold">${d.name}</td>
-            <td>
-              <div class="input-group input-group-sm" style="width: 140px;">
-                <input type="number" id="pagu_${d.id}" class="form-control" value="${paguDasar}">
-                <button class="btn btn-outline-primary" onclick="updatePagu(${d.id})" title="Simpan Pagu"><i class="bi bi-check"></i></button>
-              </div>
-              ${tambahanDisetujui > 0 ? `<small class="text-success" style="font-size: 10px;">+ Tambahan: Rp ${tambahanDisetujui.toLocaleString('id-ID')}</small>` : ''}
-            </td>
-            <td>Rp ${totalTransfer.toLocaleString('id-ID')}</td>
-            <td>Rp ${totalBelanja.toLocaleString('id-ID')}</td>
-            <td><span class="fw-bold ${sisaSaldo < 0 ? 'text-danger' : 'text-primary'}">Rp ${sisaSaldo.toLocaleString('id-ID')}</span></td>
-          </tr>`;
-      });
-
-      let totalBelanjaLainLain = 0;
-      if (expenses) {
-        expenses.filter(e => e.division_id === null || e.division_id === undefined).forEach(e => totalBelanjaLainLain += Number(e.amount));
-      }
-
-      sumBelanja += totalBelanjaLainLain;
-
-      html += `
-        <tr class="table-warning">
-          <td class="fw-semibold fst-italic">Pengeluaran Lain-Lain (Admin)</td>
-          <td><span class="text-muted">-</span></td>
-          <td><span class="text-muted">-</span></td>
-          <td class="fw-bold">Rp ${totalBelanjaLainLain.toLocaleString('id-ID')}</td>
-          <td><span class="text-muted">-</span></td>
-        </tr>`;
-
-      html += `
-        <tr class="table-dark fw-bold">
-          <td>TOTAL KESELURUHAN</td>
-          <td>Rp ${sumPagu.toLocaleString('id-ID')}</td>
-          <td>Rp ${sumTransfer.toLocaleString('id-ID')}</td>
-          <td>Rp ${sumBelanja.toLocaleString('id-ID')}</td>
-          <td>Rp ${sumSaldo.toLocaleString('id-ID')}</td>
-        </tr>`;
-
-      tbody.innerHTML = html;
-    }
-
-    async function updatePagu(divisionId) {
-      const nilaiBaru = document.getElementById(`pagu_${divisionId}`).value;
-
-      const { error } = await client
-        .from('divisions')
-        .update({ budget_limit: parseFloat(nilaiBaru) })
-        .eq('id', divisionId);
-
-      if (error) {
-        alert("Gagal mengubah pagu: " + error.message);
-      } else {
-        await catatLogAktivitas(`Admin memperbarui pagu anggaran divisi ID ${divisionId} menjadi Rp ${Number(nilaiBaru).toLocaleString('id-ID')}`);
-        alert("Pagu anggaran berhasil diperbarui!");
-        muatRekapSemuaDivisi();
-      }
-    }
-
-    async function muatDaftarPengajuanAdmin() {
-      const container = document.getElementById('adminListPengajuan');
-      
-      const { data, error } = await client
-        .from('budget_requests')
-        .select('*, divisions(name)')
-        .order('created_at', { ascending: false });
-
-      if (error || !data || data.length === 0) {
-        container.innerHTML = `<p class="text-muted small">Belum ada pengajuan tambahan anggaran.</p>`;
-        return;
-      }
-
-      let html = '';
-      data.forEach(req => {
-        let divName = req.divisions ? req.divisions.name : 'Divisi Tidak Dikenal';
-        let actionButtons = '';
-
-        if (req.status === 'pending') {
-          actionButtons = `
-            <div class="mt-2">
-              <button class="btn btn-success btn-sm me-2 fw-bold" onclick="ubahStatusPengajuan(${req.id}, 'approved')">Setujui</button>
-              <button class="btn btn-danger btn-sm fw-bold" onclick="ubahStatusPengajuan(${req.id}, 'rejected')">Tolak</button>
-            </div>`;
-        } else {
-          let badgeColor = req.status === 'approved' ? 'bg-success' : 'bg-danger';
-          actionButtons = `<div class="mt-2"><span class="badge ${badgeColor}">${req.status.toUpperCase()}</span></div>`;
-        }
-
-        html += `
-          <div class="p-3 mb-3 border rounded bg-white shadow-sm">
-            <div class="d-flex justify-content-between align-items-center">
-              <h6 class="fw-bold text-primary mb-1">Divisi: ${divName}</h6>
-              <span class="fs-5 fw-bold text-dark">Rp ${Number(req.amount).toLocaleString('id-ID')}</span>
-            </div>
-            <p class="mb-1 text-muted small"><strong>Alasan:</strong> ${req.reason}</p>
-            <small class="text-secondary" style="font-size: 11px;">Diajukan pada: ${new Date(req.created_at).toLocaleDateString('id-ID')}</small>
-            ${actionButtons}
-          </div>`;
-      });
-
-      container.innerHTML = html;
-    }
-
-    async function ubahStatusPengajuan(id, statusBaru) {
-      const { error } = await client
-        .from('budget_requests')
-        .update({ status: statusBaru })
-        .eq('id', id);
-
-      if (error) {
-        alert("Gagal memperbarui status: " + error.message);
-      } else {
-        await catatLogAktivitas(`Admin mengubah status pengajuan anggaran #${id} menjadi ${statusBaru.toUpperCase()}`);
-        alert("Status pengajuan berhasil diubah menjadi " + statusBaru);
-        muatDaftarPengajuanAdmin();
-      }
-    }
-
-    async function inisialisasiFormLainLain() {
-      const tab3 = document.getElementById('adminTab3');
-      tab3.innerHTML = `
-        <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
-          <h5 class="fw-bold mb-3">Input Pengeluaran Lain-Lain (Operasional Umum)</h5>
-          <p class="text-muted small">Catat pengeluaran di luar pagu divisi tertentu (misal: konsumsi rapat panitia inti).</p>
-          <form id="formAdminLainLain">
-            <div class="mb-3">
-              <label class="form-label">Nominal Pengeluaran (Rp)</label>
-              <input type="number" id="admAmount" class="form-control" placeholder="0" required>
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Uraian / Keterangan Keperluan</label>
-              <textarea id="admDesc" class="form-control" rows="2" placeholder="Contoh: Pembelian kesekretariatan umum..." required></textarea>
-            </div>
-            <button type="submit" class="btn btn-primary w-100 fw-bold">Simpan Pengeluaran Lain-Lain</button>
-          </form>
-        </div>
-
-        <div class="card border-0 shadow-sm rounded-4 p-4">
-          <h5 class="fw-bold mb-3">Daftar Riwayat Belanja Lain-Lain</h5>
-          <div id="tabelRekapLainLain" class="table-responsive">
-            <p class="text-muted small">Memuat riwayat...</p>
-          </div>
-        </div>`;
-
-      await muatRiwayatLainLain();
-
-      document.getElementById('formAdminLainLain').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const amount = document.getElementById('admAmount').value.trim();
-        const desc = document.getElementById('admDesc').value.trim();
-
-        const { error } = await client
-          .from('expenses')
-          .insert([{
-            division_id: null,
-            input_by_role: 'admin',
-            amount: parseFloat(amount),
-            description: desc,
-            receipt_url: null
-          }]);
-
-        if (error) {
-          alert("Gagal menyimpan pengeluaran: " + error.message);
-        } else {
-          await catatLogAktivitas(`Admin mencatat pengeluaran lain-lain sebesar Rp ${Number(amount).toLocaleString('id-ID')} (${desc})`);
-          alert("Pengeluaran lain-lain berhasil dicatat!");
-          document.getElementById('formAdminLainLain').reset();
-          await muatRiwayatLainLain();
-          await muatRekapSemuaDivisi(); 
-        }
-      });
-    }
-
-    async function muatRiwayatLainLain() {
-      const container = document.getElementById('tabelRekapLainLain');
-      if (!container) return;
-
-      const { data, error } = await client
-        .from('expenses')
-        .select('*')
-        .is('division_id', null)
-        .order('created_at', { ascending: false });
-
-      if (error || !data || data.length === 0) {
-        container.innerHTML = `<p class="text-muted small">Belum ada riwayat pengeluaran lain-lain.</p>`;
-        return;
-      }
-
-      let totalLain = 0;
-      let html = `
-        <table class="table table-hover table-sm align-middle">
-          <thead class="table-light">
-            <tr>
-              <th>Tanggal</th>
-              <th>Uraian / Keterangan</th>
-              <th>Nominal</th>
-            </tr>
-          </thead>
-          <tbody>`;
-
-      data.forEach(item => {
-        let nominal = Number(item.amount);
-        totalLain += nominal;
-        let tanggal = new Date(item.created_at).toLocaleDateString('id-ID');
-
-        html += `
-          <tr>
-            <td class="text-muted small">${tanggal}</td>
-            <td>${item.description}</td>
-            <td class="fw-bold text-danger">Rp ${nominal.toLocaleString('id-ID')}</td>
-          </tr>`;
-      });
-
-      html += `
-          </tbody>
-          <tfoot>
-            <tr class="table-light fw-bold">
-              <td colspan="2" class="text-end">Total Pengeluaran Lain-Lain:</td>
-              <td class="text-danger">Rp ${totalLain.toLocaleString('id-ID')}</td>
-            </tr>
-          </tfoot>
-        </table>`;
-
-      container.innerHTML = html;
-    }
-
-    function cetakLaporanLPJ() {
-      const rekapDiv = document.querySelector('#adminTab1 .card').innerHTML;
-      const printWindow = window.open('', '', 'height=700,width=900');
-      printWindow.document.write('<html><head><title>Laporan Pertanggungjawaban Keuangan Panitia</title>');
-      printWindow.document.write('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">');
-      printWindow.document.write('</head><body class="p-4">');
-      printWindow.document.write('<div class="text-center mb-4"><h3>LAPORAN PERTANGGUNGJAWABAN KEUANGAN PANITIA</h3><p class="text-muted">Rekapitulasi Realisasi Anggaran Per Divisi</p></div>');
-      printWindow.document.write(rekapDiv);
-      printWindow.document.write('</body></html>');
-      printWindow.document.close();
-      
-      setTimeout(() => {
-        printWindow.print();
-        printWindow.close();
-      }, 500);
-    }
-
-    async function catatLogAktivitas(pesan) {
-      await client.from('activity_logs').insert([{ activity: pesan }]);
-    }
-
-    async function muatLogAktivitasAdmin() {
-      const { data, error } = await client
-        .from('activity_logs')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(50);
-
-      const container = document.getElementById('adminLogList');
-      if (error || !data || data.length === 0) {
-        container.innerHTML = "Belum ada aktivitas tercatat.";
-        return;
-      }
-
-      let html = '<ul class="list-group list-group-flush">';
-      data.forEach(log => {
-        let tanggal = new Date(log.created_at).toLocaleString('id-ID');
-        html += `<li class="list-group-item d-flex justify-content-between align-items-start py-2">
-                  <div>${log.activity}</div>
-                  <span class="text-muted" style="font-size: 11px;">${tanggal}</span>
-                 </li>`;
-      });
-      html += '</ul>';
-      container.innerHTML = html;
-    }
-
-    async function muatDataTransferBendahara() {
-      const { data: divisions } = await client.from('divisions').select('*');
-      const { data: transfers } = await client.from('budget_transfers').select('*, divisions(name)').order('created_at', { ascending: false });
-      const { data: requests } = await client.from('budget_requests').select('division_id, amount').eq('status', 'approved');
-
-      const containerPagu = document.getElementById('benTabelKekuranganPagu');
-      if (divisions) {
-        let htmlPagu = `
-          <table class="table table-bordered table-sm align-middle text-nowrap">
-            <thead class="table-light">
-              <tr>
-                <th>Divisi</th>
-                <th>Pagu Aktif</th>
-                <th>Sudah Ditransfer</th>
-                <th>Kekurangan Belum Ditransfer</th>
-              </tr>
-            </thead>
-            <tbody>`;
-
-        let totalPaguSemua = 0;
-        let totalSudahTransfer = 0;
-        let totalKekuranganSemua = 0;
-
-        divisions.forEach(d => {
-          let paguDasar = Number(d.budget_limit || 0);
-          let tambahanDisetujui = 0;
-          if (requests) {
-            requests.filter(r => r.division_id === d.id).forEach(r => tambahanDisetujui += Number(r.amount));
-          }
-          let paguAktif = paguDasar + tambahanDisetujui;
-
-          let sudahTransfer = 0;
-          if (transfers) {
-            transfers.filter(t => t.division_id === d.id).forEach(t => sudahTransfer += Number(t.amount));
-          }
-
-          let kekurangan = paguAktif - sudahTransfer;
-
-          totalPaguSemua += paguAktif;
-          totalSudahTransfer += sudahTransfer;
-          totalKekuranganSemua += kekurangan;
-
-          htmlPagu += `
-            <tr>
-              <td class="fw-semibold">${d.name}</td>
-              <td>Rp ${paguAktif.toLocaleString('id-ID')}</td>
-              <td class="text-success">Rp ${sudahTransfer.toLocaleString('id-ID')}</td>
-              <td class="fw-bold ${kekurangan > 0 ? 'text-danger' : 'text-muted'}">Rp ${kekurangan.toLocaleString('id-ID')}</td>
-            </tr>`;
-        });
-
-        htmlPagu += `
-            </tbody>
-            <tfoot>
-              <tr class="table-dark fw-bold">
-                <td>TOTAL</td>
-                <td>Rp ${totalPaguSemua.toLocaleString('id-ID')}</td>
-                <td>Rp ${totalSudahTransfer.toLocaleString('id-ID')}</td>
-                <td>Rp ${totalKekuranganSemua.toLocaleString('id-ID')}</td>
-              </tr>
-            </tfoot>
-          </table>`;
-        containerPagu.innerHTML = htmlPagu;
-      }
-
-      const containerRiwayat = document.getElementById('benRiwayatTransfer');
-      if (!transfers || transfers.length === 0) {
-        containerRiwayat.innerHTML = `<p class="text-muted small">Belum ada riwayat transfer dana.</p>`;
-        return;
-      }
-
-      let htmlRiwayat = `
-        <table class="table table-hover table-sm align-middle">
-          <thead class="table-light">
-            <tr>
-              <th>Tanggal</th>
-              <th>Divisi Tujuan</th>
-              <th>Nominal</th>
-              <th>Catatan</th>
-            </tr>
-          </thead>
-          <tbody>`;
-
-      transfers.forEach(trf => {
-        let tanggal = new Date(trf.created_at).toLocaleDateString('id-ID');
-        let namaDiv = trf.divisions ? trf.divisions.name : 'Divisi Tidak Dikenal';
-        let nominal = Number(trf.amount);
-
-        htmlRiwayat += `
-          <tr>
-            <td class="text-muted small">${tanggal}</td>
-            <td class="fw-semibold">${namaDiv}</td>
-            <td class="fw-bold text-success">Rp ${nominal.toLocaleString('id-ID')}</td>
-            <td><small class="text-muted">${trf.description || '-'}</small></td>
-          </tr>`;
-      });
-
-      htmlRiwayat += `</tbody></table>`;
-      containerRiwayat.innerHTML = htmlRiwayat;
-    }
+    const statusClass = {"Draft":"st-draft","Diajukan":"st-submitted","Diperiksa Operator":"st-review","Menunggu Persetujuan":"st-review","Perlu Perbaikan":"st-improve","Ditolak":"st-rejected","Disetujui":"st-approved","Diterbitkan":"st-issued","Selesai":"st-complete"};
+    const statusIcon = {"Draft":"bi-pencil","Diajukan":"bi-send","Diperiksa Operator":"bi-search","Menunggu Persetujuan":"bi-hourglass-split","Perlu Perbaikan":"bi-exclamation-circle","Ditolak":"bi-x-circle","Disetujui":"bi-check-circle","Diterbitkan":"bi-patch-check","Selesai":"bi-check2-all"};
+    let currentUser = null, activeRequestId = null;
+    const store = { get requests(){return JSON.parse(localStorage.getItem("ysg_requests")||"null")||seedRequests();}, set requests(v){localStorage.setItem("ysg_requests",JSON.stringify(v));}, get templates(){return JSON.parse(localStorage.getItem("ysg_templates")||"null")||seedTemplates();}, set templates(v){localStorage.setItem("ysg_templates",JSON.stringify(v));} };
+    function seedRequests(){const now=Date.now(); const data=[{id:"SR-2025-0041",type:"Keterangan santri aktif",typeKey:"santri-aktif",applicantId:"u5",applicant:"Muhammad Rizky",identity:"221045",institution:"Pondok Pesantren Sunan Giri",purpose:"Persyaratan beasiswa pendidikan",phone:"081234567890",notes:"Mohon dicantumkan sebagai santri mukim.",attachment:"Kartu santri.pdf",status:"Menunggu Persetujuan",createdAt:new Date(now-86400000*2).toISOString(),updatedAt:new Date(now-86400000).toISOString(),history:[["Diajukan","Muhammad Rizky",now-86400000*2],["Diperiksa Operator","Operator Pondok",now-86400000*1.7],["Menunggu Persetujuan","Operator Pondok",now-86400000]]},{id:"SR-2025-0040",type:"Surat tugas",typeKey:"surat-tugas",applicantId:"u4",applicant:"Ahmad Fauzan",identity:"19870312",institution:"MA Plus Sunan Giri",purpose:"Pendampingan lomba siswa tingkat kabupaten",phone:"081222334455",notes:"Kegiatan dilaksanakan pada 20-22 September 2025.",attachment:"Undangan lomba.pdf",status:"Diterbitkan",createdAt:new Date(now-86400000*4).toISOString(),updatedAt:new Date(now-86400000*2).toISOString(),history:[["Diajukan","Ahmad Fauzan",now-86400000*4],["Diperiksa Operator","Operator MA",now-86400000*3.5],["Disetujui","Kepala MA",now-86400000*3],["Diterbitkan","Operator MA",now-86400000*2]]},{id:"SR-2025-0039",type:"Izin pulang / keluar pondok",typeKey:"izin-pulang",applicantId:"u5",applicant:"Muhammad Rizky",identity:"221045",institution:"Pondok Pesantren Sunan Giri",purpose:"Menghadiri acara keluarga",phone:"081234567890",notes:"Pulang tanggal 19 September dan kembali 21 September.",attachment:"Surat wali.jpg",status:"Selesai",createdAt:new Date(now-86400000*8).toISOString(),updatedAt:new Date(now-86400000*6).toISOString(),history:[["Diajukan","Muhammad Rizky",now-86400000*8],["Diperiksa Operator","Operator Pondok",now-86400000*7],["Disetujui","Kepala Pondok",now-86400000*6.5],["Diterbitkan","Operator Pondok",now-86400000*6],["Selesai","Muhammad Rizky",now-86400000*6]]}]; store.requests=data; return data;}
+    function seedTemplates(){const data=[{id:"T-01",name:"Keterangan santri aktif",category:"Santri",institution:"Pondok Pesantren Sunan Giri",updated:"12 Sep 2025"},{id:"T-02",name:"Surat tugas pegawai / guru",category:"Pegawai / Guru",institution:"Semua lembaga pendidikan",updated:"10 Sep 2025"},{id:"T-03",name:"Surat izin kegiatan",category:"Santri",institution:"Semua lembaga",updated:"08 Sep 2025"}]; store.templates=data; return data;}
+    const fmtDate = d => new Intl.DateTimeFormat("id-ID",{day:"2-digit",month:"short",year:"numeric"}).format(new Date(d));
+    const initials = n => n.split(" ").map(x=>x[0]).slice(0,2).join("").toUpperCase();
+    const esc = v => String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+    function visibleRequests(){let all=store.requests; if(currentUser.role==="student"||currentUser.role==="teacher") return all.filter(x=>x.applicantId===currentUser.id); if(currentUser.role==="operator"||currentUser.role==="leader") return all.filter(x=>x.institution===currentUser.institution); return all;}
+    function badge(s){return `<span class="badge-status ${statusClass[s]||"st-draft"}"><i class="bi ${statusIcon[s]||"bi-circle"}"></i>${esc(s)}</span>`;}
+    function showToast(message,type="success"){document.getElementById("toastArea").innerHTML=`<div class="toast show border-0 shadow-sm" role="alert"><div class="toast-body small"><i class="bi ${type==="success"?"bi-check-circle-fill text-success":"bi-info-circle-fill text-primary"} me-2"></i>${esc(message)}</div></div>`;setTimeout(()=>document.getElementById("toastArea").innerHTML="",3200);}
+    function canReview(r){return currentUser.role==="admin"||currentUser.role==="operator"&&r.institution===currentUser.institution;}
+    function canApprove(r){return currentUser.role==="admin"||currentUser.role==="leader"&&r.institution===currentUser.institution;}
+    function canPublish(r){return currentUser.role==="admin"||currentUser.role==="operator"&&r.institution===currentUser.institution;}
+    function setupLogin(){const sel=document.getElementById("loginAccount"); users.forEach(u=>sel.insertAdjacentHTML("beforeend",`<option value="${u.id}">${u.name} · ${u.type} · ${u.institution}</option>`)); document.getElementById("loginForm").addEventListener("submit",e=>{e.preventDefault();const u=users.find(x=>x.id===sel.value);if(document.getElementById("loginPassword").value!=="demo123"){document.getElementById("loginError").textContent="Kata sandi demo: demo123";return;}login(u);});}
+    function login(u){currentUser=u;sessionStorage.setItem("ysg_user",u.id);document.getElementById("loginView").classList.add("d-none");document.getElementById("appView").classList.remove("d-none");document.getElementById("profileName").textContent=u.name;document.getElementById("profileRole").textContent=`${u.type} · ${u.institution}`;document.getElementById("avatar").textContent=initials(u.name);document.getElementById("sidebarScope").textContent=u.institution;document.querySelectorAll(".admin-only").forEach(x=>x.classList.toggle("d-none",u.role!=="admin"));renderDashboard();renderForm();}
+    function logout(){sessionStorage.removeItem("ysg_user");location.reload();}
+    function navigate(page){document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));document.getElementById("page-"+page).classList.add("active");document.querySelectorAll(".side-link").forEach(x=>x.classList.toggle("active",x.dataset.page===page));const titles={dashboard:"Ringkasan",buat:"Ajukan surat",pengajuan:"Daftar pengajuan",template:"Template surat",pengguna:"Pengguna & lembaga",panduan:"Panduan alur"};document.getElementById("pageTitle").textContent=titles[page];if(page==="dashboard")renderDashboard();if(page==="pengajuan")renderRequests();if(page==="template")renderTemplates();if(page==="pengguna")renderUsers();if(page==="panduan")renderGuide();document.getElementById("sidebar").classList.remove("open");}
+    function renderDashboard(){const all=visibleRequests();const counts=["Diajukan","Menunggu Persetujuan","Perlu Perbaikan","Diterbitkan"];document.getElementById("welcomeTitle").textContent=`Selamat datang, ${currentUser.name.split(" ")[0]}`;document.getElementById("welcomeText").textContent=currentUser.role==="student"||currentUser.role==="teacher"?"Ajukan dan pantau status surat Anda secara berkala.":"Pantau pengajuan surat dan pastikan setiap permohonan diproses tepat waktu.";document.getElementById("metrics").innerHTML=[["Total pengajuan",all.length,"bi-files"],...counts.map((s,i)=>[s,all.filter(x=>x.status===s).length,["bi-send","bi-hourglass-split","bi-exclamation-circle","bi-patch-check"][i]])].map(x=>`<div class="metric"><i class="bi ${x[2]} metric-icon"></i><div class="metric-label">${x[0]}</div><div class="metric-value">${x[1]}</div></div>`).join("");document.getElementById("recentRequests").innerHTML=requestRows(all.slice(0,5),false);document.getElementById("operatorTip").innerHTML=(currentUser.role==="operator"||currentUser.role==="leader"||currentUser.role==="admin")?`<div class="user-scope"><i class="bi bi-lightbulb me-1 text-warning"></i> <strong>Catatan alur:</strong> pastikan pengajuan diverifikasi operator sebelum diteruskan ke pimpinan untuk persetujuan.</div>`:"";}
+    function requestRows(rows,table=true){if(!rows.length)return `<div class="empty"><i class="bi bi-inbox"></i>Belum ada pengajuan surat.</div>`;if(!table)return rows.map(r=>`<div class="d-flex justify-content-between align-items-center py-2 border-bottom"><div><div class="request-title small">${esc(r.id)} · ${esc(r.type)}</div><div class="request-meta">${esc(r.applicant)} · ${esc(r.institution)} · ${fmtDate(r.createdAt)}</div></div><div class="d-flex align-items-center gap-2">${badge(r.status)}<button class="btn btn-sm btn-light" onclick="openDetail('${r.id}')"><i class="bi bi-chevron-right"></i></button></div></div>`).join("");return rows.map(r=>`<tr><td><div class="request-title">${esc(r.id)}</div><div class="request-meta">${esc(r.type)}</div></td><td>${esc(r.applicant)}</td><td>${esc(r.institution.replace("Sunan Giri","S. Giri"))}</td><td>${fmtDate(r.createdAt)}</td><td>${badge(r.status)}</td><td class="text-end"><button class="btn btn-sm btn-light" onclick="openDetail('${r.id}')"><i class="bi bi-eye"></i> Detail</button></td></tr>`).join("");}
+    function renderForm(){const role=currentUser.role==="student"?"student":currentUser.role==="teacher"?"teacher":"operator";document.getElementById("typeOptions").innerHTML=(types[role]||types.teacher).map((t,i)=>`<div class="col-6"><div class="type-card ${i===0?"selected":""}" data-type="${t[0]}" data-label="${t[1]}"><strong>${t[1]}</strong><span>${t[2]}</span></div></div>`).join("");document.querySelectorAll(".type-card").forEach(c=>c.addEventListener("click",()=>{document.querySelectorAll(".type-card").forEach(x=>x.classList.remove("selected"));c.classList.add("selected");document.getElementById("selectedType").value=c.dataset.type;}));document.getElementById("selectedType").value=(types[role]||types.teacher)[0][0];document.getElementById("applicantName").textContent=currentUser.name;document.getElementById("applicantScope").textContent=currentUser.institution;document.getElementById("fullName").value=currentUser.name;document.getElementById("identity").value=currentUser.role==="student"?"221045":"19870312";}
+    function renderRequests(){const all=visibleRequests();document.getElementById("requestPageSub").textContent=currentUser.role==="admin"?"Pantau seluruh pengajuan dari semua lembaga.":currentUser.role==="operator"||currentUser.role==="leader"?`Pengajuan pada ${currentUser.institution}.`:"Riwayat pengajuan surat Anda.";document.getElementById("scopeFilter").textContent=`${all.length} pengajuan ditampilkan`;const query=(document.getElementById("searchRequests").value||"").toLowerCase(),status=document.getElementById("statusFilter").value;const filtered=all.filter(r=>(!query||[r.id,r.type,r.applicant,r.institution].join(" ").toLowerCase().includes(query))&&(!status||r.status===status));document.getElementById("requestTable").innerHTML=requestRows(filtered,true);document.getElementById("pendingNav").textContent=all.filter(r=>["Diajukan","Menunggu Persetujuan","Disetujui"].includes(r.status)).length;document.getElementById("pendingNav").classList.toggle("d-none",!all.length);}
+    function openDetail(id){const r=store.requests.find(x=>x.id===id);if(!r)return;activeRequestId=id;document.getElementById("detailTitle").textContent=`${r.id} · ${r.type}`;document.getElementById("detailBody").innerHTML=`<div class="d-flex justify-content-between align-items-center mb-3">${badge(r.status)}<span class="eyebrow">Dibuat ${fmtDate(r.createdAt)}</span></div><div class="row g-3 mb-2"><div class="col-md-6"><div class="detail-label">Pemohon</div><div class="detail-value">${esc(r.applicant)}</div></div><div class="col-md-6"><div class="detail-label">Lembaga</div><div class="detail-value">${esc(r.institution)}</div></div><div class="col-md-6"><div class="detail-label">NIK / NIS</div><div class="detail-value">${esc(r.identity)}</div></div><div class="col-md-6"><div class="detail-label">Keperluan</div><div class="detail-value">${esc(r.purpose)}</div></div><div class="col-12"><div class="detail-label">Keterangan</div><div class="detail-value fw-normal">${esc(r.notes)||"—"}</div></div>${r.attachment?`<div class="col-12"><div class="detail-label">Lampiran</div><div class="detail-value"><i class="bi bi-paperclip me-1"></i>${esc(r.attachment)}</div></div>`:""}</div><hr><div class="detail-label mb-2">Riwayat proses</div><div class="timeline">${(r.history||[]).map(h=>`<div class="timeline-item done"><small>${fmtDate(h[2])}</small><strong>${esc(h[0])}</strong><span class="eyebrow">oleh ${esc(h[1])}</span></div>`).join("")}</div>${r.revisionNote?`<div class="alert alert-warning small mt-2 mb-0"><strong>Catatan perbaikan:</strong> ${esc(r.revisionNote)}</div>`:""}`;const actions=[];if(r.status==="Diajukan"&&canReview(r))actions.push(`<button class="btn btn-outline-warning btn-sm" onclick="changeStatus('review')">Periksa pengajuan</button>`);if(r.status==="Diperiksa Operator"&&canReview(r))actions.push(`<button class="btn btn-outline-warning btn-sm" onclick="requestRevision()">Minta perbaikan</button><button class="btn btn-primary btn-sm" onclick="changeStatus('forward')">Teruskan ke pimpinan</button>`);if(r.status==="Menunggu Persetujuan"&&canApprove(r))actions.push(`<button class="btn btn-outline-danger btn-sm" onclick="changeStatus('reject')">Tolak</button><button class="btn btn-primary btn-sm" onclick="changeStatus('approve')">Setujui surat</button>`);if(r.status==="Disetujui"&&canPublish(r))actions.push(`<button class="btn btn-primary btn-sm" onclick="changeStatus('publish')"><i class="bi bi-patch-check me-1"></i>Terbitkan surat</button>`);if(["Diterbitkan","Selesai"].includes(r.status))actions.push(`<button class="btn btn-gold btn-sm" onclick="downloadLetter()"><i class="bi bi-download me-1"></i>Unduh surat</button>`);if(r.status==="Perlu Perbaikan"&&(r.applicantId===currentUser.id))actions.push(`<button class="btn btn-primary btn-sm" onclick="editRevision()">Ajukan ulang</button>`);document.getElementById("detailActions").innerHTML=`<button class="btn btn-light btn-sm me-auto" data-bs-dismiss="modal">Tutup</button>${actions.join("")}`;new bootstrap.Modal(document.getElementById("detailModal")).show();}
+    function changeStatus(action){const all=store.requests,r=all.find(x=>x.id===activeRequestId);const map={review:["Diperiksa Operator","Pengajuan diperiksa"],forward:["Menunggu Persetujuan","Pengajuan diteruskan ke pimpinan"],reject:["Ditolak","Pengajuan ditolak"],approve:["Disetujui","Surat disetujui"],publish:["Diterbitkan","Surat berhasil diterbitkan"]};const next=map[action];if(!r||!next)return;r.status=next[0];r.updatedAt=new Date().toISOString();r.history.push([next[0],currentUser.name,Date.now()]);store.requests=all;bootstrap.Modal.getInstance(document.getElementById("detailModal")).hide();showToast(next[1]);renderDashboard();renderRequests();}
+    function requestRevision(){const note=prompt("Tuliskan catatan perbaikan untuk pemohon:","Mohon lengkapi lampiran atau keterangan keperluan.");if(!note)return;const all=store.requests,r=all.find(x=>x.id===activeRequestId);r.status="Perlu Perbaikan";r.revisionNote=note;r.history.push(["Perlu Perbaikan",currentUser.name,Date.now()]);store.requests=all;bootstrap.Modal.getInstance(document.getElementById("detailModal")).hide();showToast("Catatan perbaikan dikirim ke pemohon");renderDashboard();renderRequests();}
+    function editRevision(){const r=store.requests.find(x=>x.id===activeRequestId);bootstrap.Modal.getInstance(document.getElementById("detailModal")).hide();navigate("buat");document.getElementById("purpose").value=r.purpose;document.getElementById("notes").value=r.notes;document.getElementById("selectedType").value=r.typeKey;document.querySelectorAll(".type-card").forEach(c=>c.classList.toggle("selected",c.dataset.type===r.typeKey));document.getElementById("requestForm").dataset.editId=r.id;}
+    function saveRequest(status="Draft"){const form=document.getElementById("requestForm"),typeKey=document.getElementById("selectedType").value,t=(types[currentUser.role==="student"?"student":currentUser.role==="teacher"?"teacher":"operator"]||[]).find(x=>x[0]===typeKey)||["",document.querySelector(".type-card.selected")?.dataset.label||"Surat"];const file=document.getElementById("attachment").files[0];const all=store.requests;const editId=form.dataset.editId;const item={id:editId||`SR-${new Date().getFullYear()}-${String(100+all.length+1).padStart(4,"0")}`,type:t[1],typeKey,applicantId:currentUser.id,applicant:document.getElementById("fullName").value.trim(),identity:document.getElementById("identity").value.trim(),institution:currentUser.institution,purpose:document.getElementById("purpose").value.trim(),phone:document.getElementById("phone").value.trim(),notes:document.getElementById("notes").value.trim(),attachment:file?file.name:"",status,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),history:[[status,currentUser.name,Date.now()]]};if(editId){const old=all.find(x=>x.id===editId);item.createdAt=old.createdAt;item.history=old.history.concat([["Diajukan ulang",currentUser.name,Date.now()]]);item.status="Diajukan";item.revisionNote="";all[all.findIndex(x=>x.id===editId)]=item;}else all.unshift(item);store.requests=all;form.reset();delete form.dataset.editId;renderForm();showToast(status==="Draft"?"Draft surat tersimpan":"Pengajuan surat berhasil dikirim");navigate("pengajuan");}
+    function renderTemplates(){document.getElementById("templateTable").innerHTML=store.templates.map(t=>`<tr><td class="request-title">${esc(t.name)}</td><td>${esc(t.category)}</td><td>${esc(t.institution)}</td><td>${esc(t.updated)}</td><td class="text-end"><button class="btn btn-sm btn-light"><i class="bi bi-three-dots"></i></button></td></tr>`).join("");}
+    function renderUsers(){document.getElementById("userCards").innerHTML=users.map(u=>`<div class="col-md-6 col-xl-4"><div class="card-box h-100"><div class="d-flex align-items-center gap-3"><div class="avatar">${initials(u.name)}</div><div><strong class="d-block small">${esc(u.name)}</strong><span class="eyebrow">${esc(u.type)}</span></div></div><hr><div class="detail-label">Lembaga / ruang lingkup</div><div class="detail-value">${esc(u.institution)}</div><div class="mt-2"><span class="badge bg-light text-dark fw-normal">${u.role}</span></div></div></div>`).join("");}
+    function renderGuide(){const steps=[["01","Pemohon membuat pengajuan","Pilih jenis surat, lengkapi formulir, tambahkan lampiran bila diperlukan, lalu simpan sebagai draft atau ajukan langsung."],["02","Operator memeriksa","Operator hanya melihat pengajuan dari lembaganya. Pengajuan dapat diteruskan ke pimpinan atau dikembalikan dengan catatan perbaikan."],["03","Pimpinan menyetujui","Pimpinan/kepala lembaga meninjau pengajuan dan memilih setujui atau tolak. Admin yayasan dapat memantau seluruh lembaga."],["04","Surat diterbitkan","Operator menerbitkan surat yang telah disetujui. Pemohon dapat mengunduh surat terbit dan menandai proses selesai."]];document.getElementById("guideCards").innerHTML=steps.map(s=>`<div class="col-md-6"><div class="card-box h-100"><div class="d-flex gap-3"><div class="avatar">${s[0]}</div><div><h6 class="mb-1">${s[1]}</h6><p class="eyebrow mb-0">${s[2]}</p></div></div></div></div>`).join("");}
+    function downloadLetter(){const r=store.requests.find(x=>x.id===activeRequestId);const text=`SURAT KETERANGAN\nYAYASAN SUNAN GIRI SALATIGA\n\nNomor: ${r.id}\n\nYang bertanda tangan di bawah ini menerangkan bahwa:\nNama: ${r.applicant}\nLembaga: ${r.institution}\nKeperluan: ${r.purpose}\n\nSurat ini dibuat untuk dapat dipergunakan sebagaimana mestinya.\n\nSalatiga, ${fmtDate(Date.now())}\nYayasan Sunan Giri Salatiga`;const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([text],{type:"text/plain"}));a.download=`${r.id}-surat.txt`;a.click();URL.revokeObjectURL(a.href);showToast("Surat berhasil diunduh");}
+    function init(){setupLogin();renderGuide();document.getElementById("logoutBtn").addEventListener("click",logout);document.getElementById("menuBtn").addEventListener("click",()=>document.getElementById("sidebar").classList.toggle("open"));document.querySelectorAll(".side-link").forEach(x=>x.addEventListener("click",()=>navigate(x.dataset.page)));document.querySelectorAll("[data-go]").forEach(x=>x.addEventListener("click",()=>navigate(x.dataset.go)));document.getElementById("searchRequests").addEventListener("input",renderRequests);document.getElementById("statusFilter").addEventListener("change",renderRequests);document.getElementById("requestForm").addEventListener("submit",e=>{e.preventDefault();if(!e.target.reportValidity())return;saveRequest("Diajukan");});document.getElementById("saveDraftBtn").addEventListener("click",()=>{if(!document.getElementById("purpose").value.trim()){showToast("Isi keperluan sebelum menyimpan draft","info");return;}saveRequest("Draft");});document.getElementById("addTemplateBtn").addEventListener("click",()=>new bootstrap.Modal(document.getElementById("templateModal")).show());document.getElementById("templateForm").addEventListener("submit",e=>{e.preventDefault();const a=store.templates;a.push({id:`T-${String(a.length+1).padStart(2,"0")}`,name:document.getElementById("templateName").value,category:document.getElementById("templateCategory").value,institution:document.getElementById("templateInstitution").value,updated:fmtDate(Date.now())});store.templates=a;bootstrap.Modal.getInstance(document.getElementById("templateModal")).hide();e.target.reset();renderTemplates();showToast("Template baru berhasil ditambahkan");});const saved=sessionStorage.getItem("ysg_user");if(saved){const u=users.find(x=>x.id===saved);if(u)login(u);}}
+    document.addEventListener("DOMContentLoaded",init);
   </script>
 </body>
 </html>
